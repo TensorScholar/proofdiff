@@ -1,0 +1,11 @@
+{
+  "responses": [
+    {
+      "text": "ok",
+      "model_name": "fake-model",
+      "metadata": {
+        "tokens": 1
+      }
+    }
+  ]
+}

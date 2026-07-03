@@ -1,0 +1,20 @@
+[
+  {
+    "id": "case-metric",
+    "dataset_id": "dataset-example",
+    "name": "Metric failure",
+    "inputs": {
+      "prompt": "Say ok"
+    },
+    "expected_output": "ok"
+  },
+  {
+    "id": "case-error",
+    "dataset_id": "dataset-example",
+    "name": "Provider error",
+    "inputs": {
+      "prompt": "Call tool"
+    },
+    "expected_output": null
+  }
+]

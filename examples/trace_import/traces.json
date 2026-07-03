@@ -1,0 +1,21 @@
+{
+  "records": [
+    {
+      "id": "trace-ok",
+      "inputs": {
+        "prompt": "Say ok"
+      },
+      "output": "ok"
+    },
+    {
+      "id": "trace-failed",
+      "inputs": {
+        "prompt": "Say ok"
+      },
+      "output": "not ok",
+      "metadata": {
+        "failed": true
+      }
+    }
+  ]
+}
