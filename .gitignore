@@ -12,3 +12,29 @@ build/
 .DS_Store
 coverage.xml
 coverage.json
+
+# Local secrets and environment state
+.env
+.env.*
+
+# Internal AI/orchestration state must never become public repository content.
+.axiom/
+/AGENTS.md
+/AUTONOMY_POLICY.md
+/CODEX_*.md
+/GITHUB_MIGRATION.md
+/GLOBAL_CONSTRAINTS.md
+/PROJECT_STATUS.md
+/PROTECTED_FILE_MANIFEST.json
+/PUBLISHING.md
+/README_START_HERE.md
+/REPORT_TEMPLATE.md
+/SELF_AUDIT_CHECKLIST.md
+/START_PROMPT_FOR_CODEX.md
+/STOP_CONDITIONS.md
+/TASK_GRAPH.yaml
+/VALIDATION_POLICY.md
+/docs/commercial-support.md
+/docs/migration-from-axiom.md
+/docs/release-readiness.md
+/docs/security-audit.md
