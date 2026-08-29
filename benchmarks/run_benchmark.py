@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import platform
 import random
@@ -69,7 +70,7 @@ def manifest(optional_property: str | None = None) -> dict[str, object]:
     }
 
 
-def main() -> int:
+def main(*, write_results: bool = True) -> int:
     rng = random.Random(SEED)
     contracts = [contract(index) for index in range(CONTRACTS)]
     durations: list[float] = []
@@ -135,11 +136,18 @@ def main() -> int:
         "python": sys.version.split()[0],
         "platform": platform.platform(),
     }
-    output = ROOT / "benchmarks" / "results.json"
-    output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if write_results:
+        output = ROOT / "benchmarks" / "results.json"
+        output.write_text(
+            json.dumps(result, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-write", action="store_true")
+    args = parser.parse_args()
+    raise SystemExit(main(write_results=not args.no_write))

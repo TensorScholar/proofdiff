@@ -5,6 +5,7 @@ import gzip
 import hashlib
 import io
 import os
+import subprocess
 import tarfile
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -22,7 +23,7 @@ FIXED_TIME = (2026, 1, 1, 0, 0, 0)
 
 def wheel_metadata() -> dict[str, bytes]:
     dist_info = f"{DIST_NAME}-{VERSION}.dist-info"
-    metadata = f"""Metadata-Version: 2.3
+    metadata = f"""Metadata-Version: 2.4
 Name: proofdiff
 Version: {VERSION}
 Summary: Change-aware release assurance for AI agents.
@@ -51,12 +52,34 @@ def record_line(path: str, data: bytes) -> str:
     return f"{path},sha256={encoded},{len(data)}"
 
 
+def tracked_source_files() -> list[Path]:
+    completed = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    )
+    files: list[Path] = []
+    for raw in completed.stdout.split(b"\0"):
+        if not raw:
+            continue
+        relative = Path(os.fsdecode(raw))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise RuntimeError(f"unsafe tracked release path: {relative}")
+        path = ROOT / relative
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError(f"tracked release path is missing or unsafe: {relative.as_posix()}")
+        files.append(path)
+    return sorted(files, key=lambda item: item.relative_to(ROOT).as_posix())
+
+
 def build_wheel() -> Path:
     DIST.mkdir(exist_ok=True)
     target = DIST / WHEEL_NAME
     files: dict[str, bytes] = {}
-    for path in sorted((SRC / "proofdiff").rglob("*")):
-        if path.is_file() and "__pycache__" not in path.parts:
+    package_root = SRC / "proofdiff"
+    for path in tracked_source_files():
+        if path.is_relative_to(package_root):
             files[path.relative_to(SRC).as_posix()] = path.read_bytes()
     files.update(wheel_metadata())
     dist_info = f"{DIST_NAME}-{VERSION}.dist-info"
@@ -82,13 +105,15 @@ def include_in_sdist(path: Path) -> bool:
         "build",
         "__pycache__",
         ".venv",
+        "venv",
+        ".proofdiff",
         "htmlcov",
     }
-    if any(part in excluded for part in path.parts):
+    if any(part in excluded or part.endswith(".egg-info") for part in path.parts):
         return False
-    if path.name in {".coverage", "coverage.xml", "coverage.json"} or path.suffix in {".pyc", ".pyo"}:
+    if path.name in {".coverage", ".DS_Store", "coverage.xml", "coverage.json"}:
         return False
-    return path.is_file()
+    return path.suffix not in {".pyc", ".pyo"}
 
 
 def build_sdist() -> Path:
@@ -97,7 +122,16 @@ def build_sdist() -> Path:
     prefix = PurePosixPath(f"{DIST_NAME}-{VERSION}")
     raw = io.BytesIO()
     with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as archive:
-        for path in sorted(ROOT.rglob("*")):
+        metadata = next(data for name, data in wheel_metadata().items() if name.endswith("/METADATA"))
+        pkg_info = tarfile.TarInfo(str(prefix / "PKG-INFO"))
+        pkg_info.size = len(metadata)
+        pkg_info.mtime = 0
+        pkg_info.mode = 0o644
+        pkg_info.uid = pkg_info.gid = 0
+        pkg_info.uname = pkg_info.gname = ""
+        archive.addfile(pkg_info, io.BytesIO(metadata))
+
+        for path in tracked_source_files():
             relative = path.relative_to(ROOT)
             if not include_in_sdist(relative):
                 continue
@@ -109,9 +143,11 @@ def build_sdist() -> Path:
             info.uid = info.gid = 0
             info.uname = info.gname = ""
             archive.addfile(info, io.BytesIO(data))
-    with target.open("wb") as handle:
-        with gzip.GzipFile(filename="", mode="wb", fileobj=handle, mtime=0, compresslevel=9) as zipped:
-            zipped.write(raw.getvalue())
+    with (
+        target.open("wb") as handle,
+        gzip.GzipFile(filename="", mode="wb", fileobj=handle, mtime=0, compresslevel=9) as zipped,
+    ):
+        zipped.write(raw.getvalue())
     return target
 
 

@@ -12,7 +12,17 @@ WHEEL = ROOT / "dist" / f"proofdiff-{VERSION}-py3-none-any.whl"
 
 
 def run(command: list[str], *, cwd: Path | None = None, expected: int = 0) -> subprocess.CompletedProcess[str]:
-    completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False)
+    env = os.environ.copy()
+    env.pop("PYTHONPATH", None)
+    env.pop("PYTHONHOME", None)
+    completed = subprocess.run(
+        command,
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+        env=env,
+    )
     if completed.returncode != expected:
         raise SystemExit(
             f"command failed ({completed.returncode}, expected {expected}): {' '.join(command)}\n"
@@ -25,7 +35,7 @@ def main() -> int:
     if not WHEEL.is_file():
         run([sys.executable, str(ROOT / "scripts" / "build_dist.py")])
     with tempfile.TemporaryDirectory(prefix="proofdiff-smoke-") as raw:
-        temp = Path(raw)
+        temp = Path(raw).resolve(strict=True)
         venv = temp / "venv"
         run([sys.executable, "-m", "venv", str(venv)])
         python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")

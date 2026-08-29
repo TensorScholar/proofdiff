@@ -62,8 +62,23 @@ def main() -> int:
     run([sys.executable, "scripts/check_schemas.py"])
     run([sys.executable, "scripts/check_architecture.py"])
     run([sys.executable, "scripts/security_scan.py"])
-    run([sys.executable, "benchmarks/run_benchmark.py"])
+    run([sys.executable, "benchmarks/run_benchmark.py", "--no-write"])
     run([sys.executable, "scripts/build_dist.py"])
+    distributions = [
+        *sorted((ROOT / "dist").glob("*.whl")),
+        *sorted((ROOT / "dist").glob("*.tar.gz")),
+    ]
+    if not distributions:
+        raise SystemExit("release build produced no distributions")
+    run(
+        [
+            sys.executable,
+            "-m",
+            "twine",
+            "check",
+            *(str(path) for path in distributions),
+        ]
+    )
     run([sys.executable, "scripts/generate_sbom.py"])
     run([sys.executable, "scripts/smoke_install.py"])
     print("Release checks passed")
