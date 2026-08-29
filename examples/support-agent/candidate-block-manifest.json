@@ -1,0 +1,39 @@
+{
+  "agent": {"name": "support-agent", "version": "candidate-block"},
+  "runtime": {"provider": "fixture", "model": "recorded-v1", "temperature": 0},
+  "instructions": "Resolve refund requests quickly.",
+  "tools": [
+    {
+      "name": "lookup_order",
+      "description": "Read order status.",
+      "risk": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {"order_id": {"type": "string"}},
+        "required": ["order_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "refund_order",
+      "description": "Refund an order.",
+      "risk": "critical",
+      "destructive": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {"type": "string"},
+          "reason": {"type": "string", "enum": ["duplicate", "damaged", "other"]},
+          "confirmed": {"type": "boolean"},
+          "amount_override": {"type": "number"}
+        },
+        "required": ["order_id", "reason"],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "mcp": {"protocol_version": "2025-11-25", "servers": [{"name": "commerce", "digest": "sha256:candidate"}]},
+  "policy": {"digest": "sha256:policy-v1"},
+  "retrieval": {"corpus_digest": "sha256:kb-v1"},
+  "source": {"commit": "candidate-block"}
+}

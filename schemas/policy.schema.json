@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TensorScholar/proofdiff/schemas/policy.schema.json",
+  "title": "ProofDiff Decision Policy",
+  "type": "object",
+  "properties": {
+    "block_on_missing_critical": {"type": "boolean"},
+    "block_on_new_critical_regression": {"type": "boolean"},
+    "block_on_any_critical_failure": {"type": "boolean"},
+    "review_on_uncovered_high_change": {"type": "boolean"},
+    "review_on_high_risk_capability_change": {"type": "boolean"},
+    "review_on_fallback": {"type": "boolean"},
+    "review_on_empty_selection": {"type": "boolean"}
+  },
+  "additionalProperties": false
+}

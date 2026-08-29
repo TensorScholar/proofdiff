@@ -1,0 +1,15 @@
+{
+  "id": "lookup.within_budget",
+  "title": "Order lookup remains within budget",
+  "risk": "medium",
+  "tags": ["budget"],
+  "always_run": false,
+  "covers": {
+    "tools": ["lookup_order"],
+    "change_types": ["MODEL_CHANGED", "PROVIDER_CHANGED", "RUNTIME_CONFIG_CHANGED"]
+  },
+  "expect": {
+    "required_tools": ["lookup_order"],
+    "budgets": {"cost_usd": 0.02, "latency_ms": 1500, "tool_calls": 2}
+  }
+}

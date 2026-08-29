@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TensorScholar/proofdiff/schemas/contract.schema.json",
+  "title": "ProofDiff Behavioral Contract",
+  "type": "object",
+  "required": ["id", "risk", "covers", "expect"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,127}$"
+    },
+    "title": {"type": "string", "minLength": 1, "maxLength": 512},
+    "risk": {"enum": ["low", "medium", "high", "critical"]},
+    "tags": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "always_run": {"type": "boolean"},
+    "covers": {
+      "type": "object",
+      "properties": {
+        "tools": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "change_types": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {
+            "enum": [
+              "AGENT_CONFIG_CHANGED",
+              "MODEL_CHANGED",
+              "PROVIDER_CHANGED",
+              "SYSTEM_INSTRUCTION_CHANGED",
+              "TOOL_ADDED",
+              "TOOL_REMOVED",
+              "TOOL_DESCRIPTION_CHANGED",
+              "TOOL_SAFETY_METADATA_CHANGED",
+              "TOOL_CONFIGURATION_CHANGED",
+              "TOOL_INPUT_SCHEMA_EXPANDED",
+              "TOOL_INPUT_SCHEMA_RESTRICTED",
+              "TOOL_SCHEMA_CHANGED",
+              "MCP_SERVER_CHANGED",
+              "POLICY_CHANGED",
+              "POLICY_SCOPE_EXPANDED",
+              "RETRIEVAL_CORPUS_CHANGED",
+              "RUNTIME_CONFIG_CHANGED",
+              "SOURCE_CODE_CHANGED",
+              "UNCLASSIFIED_CHANGE"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "manifest_paths": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "capabilities": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "expect": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "required_sequence": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "forbidden_tools": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "required_tools": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "max_tool_calls": {
+          "type": "object",
+          "maxProperties": 1000,
+          "propertyNames": {"minLength": 1},
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "output_contains": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "output_not_contains": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "output_min_length": {"type": "integer", "minimum": 0, "maximum": 1000000},
+        "budgets": {
+          "type": "object",
+          "maxProperties": 1000,
+          "propertyNames": {"minLength": 1},
+          "additionalProperties": {"type": "number", "minimum": 0}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "anyOf": [
+        {"properties": {"always_run": {"const": true}}, "required": ["always_run"]},
+        {"properties": {"covers": {"minProperties": 1}}}
+      ]
+    }
+  ],
+  "additionalProperties": false
+}
