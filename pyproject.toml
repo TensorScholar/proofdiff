@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "proofdiff"
 dynamic = ["version"]
-description = "Change-aware release assurance for AI agents."
+description = "Evidence-first behavioral change analysis for evolving AI systems."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
 authors = [{name = "Mohammad Atashi"}]
-keywords = ["ai-agents", "regression-testing", "release-engineering", "mcp", "llm-evaluation"]
+keywords = ["ai-agents", "behavioral-regression", "change-analysis", "release-engineering", "llm-evaluation"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",

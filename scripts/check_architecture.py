@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import ast
-from pathlib import Path
+import os
+import subprocess
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src" / "proofdiff"
@@ -12,6 +14,65 @@ FORBIDDEN_IMPORTS: dict[str, tuple[str, ...]] = {
     "reporting": ("proofdiff.cli",),
 }
 NETWORK_MODULES = ("httpx", "requests", "urllib.request", "socket", "aiohttp")
+
+ALLOWED_ROOT_ENTRIES = frozenset(
+    {
+        ".github",
+        ".gitignore",
+        "CHANGELOG.md",
+        "CITATION.cff",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "MANIFEST.in",
+        "Makefile",
+        "README.md",
+        "SECURITY.md",
+        "benchmarks",
+        "docs",
+        "examples",
+        "pyproject.toml",
+        "schemas",
+        "scripts",
+        "src",
+        "tests",
+    }
+)
+REQUIRED_ROOT_ENTRIES = frozenset(
+    {
+        ".github",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "README.md",
+        "SECURITY.md",
+        "docs",
+        "pyproject.toml",
+        "src",
+        "tests",
+    }
+)
+FORBIDDEN_PUBLIC_BASENAMES = frozenset(
+    {
+        "AGENTS.md",
+        "AUTONOMY_POLICY.md",
+        "GITHUB_MIGRATION.md",
+        "GLOBAL_CONSTRAINTS.md",
+        "PROJECT_STATUS.md",
+        "PROTECTED_FILE_MANIFEST.json",
+        "PUBLISHING.md",
+        "README_START_HERE.md",
+        "REPORT_TEMPLATE.md",
+        "SELF_AUDIT_CHECKLIST.md",
+        "START_PROMPT_FOR_CODEX.md",
+        "STOP_CONDITIONS.md",
+        "TASK_GRAPH.yaml",
+        "VALIDATION_POLICY.md",
+        "commercial-support.md",
+        "migration-from-axiom.md",
+        "release-readiness.md",
+        "security-audit.md",
+    }
+)
 
 
 def imported_modules(path: Path) -> list[str]:
@@ -25,8 +86,36 @@ def imported_modules(path: Path) -> list[str]:
     return modules
 
 
+def tracked_paths() -> list[PurePosixPath]:
+    completed = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    )
+    return [PurePosixPath(os.fsdecode(raw)) for raw in completed.stdout.split(b"\0") if raw]
+
+
+def check_public_repository_surface(findings: list[str]) -> None:
+    paths = tracked_paths()
+    top_level = {path.parts[0] for path in paths if path.parts}
+
+    for entry in sorted(top_level - ALLOWED_ROOT_ENTRIES):
+        findings.append(f"repository root contains unapproved public entry: {entry}")
+    for entry in sorted(REQUIRED_ROOT_ENTRIES - top_level):
+        findings.append(f"repository root is missing required public entry: {entry}")
+
+    for path in paths:
+        if ".axiom" in path.parts:
+            findings.append(f"internal AXIOM control-plane artifact must not be tracked: {path}")
+        if path.name in FORBIDDEN_PUBLIC_BASENAMES or path.name.startswith("CODEX_"):
+            findings.append(f"internal orchestration/migration artifact must not be public: {path}")
+
+
 def main() -> int:
     findings: list[str] = []
+    check_public_repository_surface(findings)
+
     for path in sorted(SRC.rglob("*.py")):
         relative = path.relative_to(SRC)
         layer = relative.parts[0] if len(relative.parts) > 1 else "root"
@@ -41,6 +130,7 @@ def main() -> int:
             for module in imports:
                 if module in NETWORK_MODULES or module.startswith(tuple(item + "." for item in NETWORK_MODULES)):
                     findings.append(f"{relative}: deterministic core must not import network module {module}")
+
     if findings:
         raise SystemExit("Architecture check failed:\n" + "\n".join(findings))
     print("Architecture check passed")

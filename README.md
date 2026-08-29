@@ -1,35 +1,36 @@
 <p align="center">
-  <img src="docs/assets/proofdiff-hero.svg" alt="ProofDiff — change-aware release assurance for AI agents" width="100%" />
+  <img src="docs/assets/proofdiff-hero.svg" alt="ProofDiff — evidence-first behavioral change analysis for AI systems" width="100%" />
 </p>
 
 <p align="center"><strong>Know what changed. Test what matters. Ship with evidence.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/TensorScholar/proofdiff/ci.yml?branch=main&label=CI"></a>
+  <a href="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB">
   <img alt="release candidate" src="https://img.shields.io/badge/status-release%20candidate-orange">
 </p>
 
-ProofDiff is a local-first release-assurance tool for AI agents. It compares a candidate with a
-trusted baseline, classifies the changed behavioral surface, selects contracts linked to that
-surface, replays deterministic fixture traces, and emits a scoped **PASS**, **REVIEW**, or
-**BLOCK** decision with a closed-set evidence bundle.
+ProofDiff is an evidence-first behavioral change analysis tool for evolving AI systems. Its current
+release-assurance core compares a candidate with a trusted baseline, classifies the changed manifest
+surface, selects behavioral contracts linked to that surface, replays deterministic fixture traces,
+and emits a scoped **PASS**, **REVIEW**, or **BLOCK** decision with a closed-set evidence bundle.
 
-It is deliberately narrower than a general evaluation platform: ProofDiff answers one operational
-question—**what evidence should block or review this agent release because of what changed?**
+ProofDiff is deliberately narrower than a general evaluation or observability platform. It answers
+an operational release question: **what changed, what evidence is relevant to that change, and does
+the supplied evidence justify shipping, review, or blocking?**
 
 ## Why it exists
 
-Agent releases can change behavior through prompts, models, tool descriptions, JSON Schemas, MCP
-servers, policies, retrieval state, source revisions, or runtime configuration. Full regression
-suites are expensive; ad-hoc smoke tests miss blast radius. ProofDiff combines conservative change
-analysis with declared behavioral coverage so CI can run the relevant suite without claiming more
-than the supplied evidence proves.
+AI-system releases can change behavior through prompts, models, tool descriptions, JSON Schemas,
+MCP configuration, policies, retrieval state, source revisions, or runtime configuration. Full
+regression suites can be expensive; ad-hoc smoke tests can miss blast radius. ProofDiff combines
+conservative change analysis with declared behavioral coverage so CI can run the relevant suite
+without claiming more than the supplied evidence proves.
 
-## Install from a checkout
+## Quick start
 
-The release candidate is not advertised as published on PyPI.
+The release candidate is not advertised as published on PyPI. Install it from a checkout:
 
 ```bash
 git clone https://github.com/TensorScholar/proofdiff.git
@@ -51,13 +52,13 @@ proofdiff check \
   --evidence .proofdiff/evidence/demo
 ```
 
-Expected exit code: `2` (`BLOCK`). Then verify the bundle:
+Expected exit code: `2` (`BLOCK`). Verify the resulting evidence bundle with:
 
 ```bash
 proofdiff verify --evidence .proofdiff/evidence/demo
 ```
 
-## Release path
+## Release-analysis pipeline
 
 ```mermaid
 flowchart LR
@@ -72,7 +73,7 @@ flowchart LR
 
 ### Change intelligence
 
-ProofDiff recognizes:
+ProofDiff currently recognizes:
 
 - agent identity/configuration, instructions, model, provider, and runtime changes;
 - tool addition/removal, descriptions, safety metadata, opaque configuration, and input schemas;
@@ -120,7 +121,7 @@ Exit codes are stable: `0` PASS, `1` REVIEW, `2` BLOCK, `3` input/integrity erro
 
 ## Evidence model
 
-Every successful run creates only the following files:
+Every successful run creates only the documented evidence set:
 
 ```text
 evidence/
@@ -142,11 +143,10 @@ evidence/
 ```
 
 Verification rejects missing, modified, duplicate, symlinked, path-traversing, or unexpected files.
-The bundle records selected contracts, effective policy, canonical trace digests, scoped claims,
-and explicit limitations. Checksums establish post-generation integrity—not publisher identity.
-Use a signed release or artifact attestation when authenticity matters.
+The bundle records selected contracts, effective policy, canonical trace digests, scoped claims, and
+explicit limitations. Checksums establish post-generation integrity, not publisher identity.
 
-## Input and secret handling
+## Security properties
 
 - strict JSON rejects duplicate keys and non-finite values;
 - optional YAML uses safe loading and rejects duplicate keys;
@@ -161,13 +161,13 @@ it is not a secret-management system.
 
 ## Measured repository benchmark
 
-The maintained synthetic benchmark uses 300 deterministic scenarios, 2,000 declared contracts,
-and 200 tools. It measures consistency with its own declared tool-to-contract oracle—not
-production safety or general semantic recall. The recorded artifact reports 100% declared-coverage
-recall, approximately 96.5% mean suite reduction, a PASS for identical manifests, and a BLOCK for
-an injected critical failure. See [`docs/benchmark-card.md`](docs/benchmark-card.md).
+The maintained synthetic benchmark uses 300 deterministic scenarios, 2,000 declared contracts, and
+200 tools. It measures consistency with its own declared tool-to-contract oracle, not production
+safety or general semantic recall. The recorded artifact reports 100% declared-coverage recall,
+approximately 96.5% mean suite reduction, a PASS for identical manifests, and a BLOCK for an
+injected critical failure. See [`docs/benchmark-card.md`](docs/benchmark-card.md).
 
-These are not claims about production workloads.
+These measurements are not claims about production workloads.
 
 ## Architecture
 
@@ -190,16 +190,25 @@ See [`docs/architecture.md`](docs/architecture.md).
 - not a runtime authorization gateway or credential broker;
 - not a sandbox, provider firewall, or secret manager;
 - not a hosted dashboard or observability backend;
-- not proof that an agent is safe, correct, compliant, or regression-free;
+- not proof that an AI system is safe, correct, compliant, or regression-free;
 - not a substitute for live integration, adversarial, security, or human review.
 
 ## Release status
 
-`0.1.0rc2` is an engineering release candidate. The source package includes deterministic tests,
-branch-aware coverage enforcement, schema checks, a reproducible local build path, clean-wheel
-smoke testing, CI/CodeQL workflows, a threat model, and migration instructions. External Linux
-matrix CI, dependency audit, standard PEP 517 build/twine validation, and a real pilot remain
-release gates until independently executed on the migration branch.
+`0.1.0rc2` is an engineering release candidate, not a production-readiness claim. Release-candidate
+validation includes public Linux CI on Python 3.11, 3.12, 3.13, and 3.14; Ruff; strict mypy;
+branch-aware coverage enforcement; schema, architecture, and security checks; `pip-audit`; CodeQL;
+standard PEP 517 build and Twine validation; clean-wheel smoke installation; and conformance
+examples.
 
-Read [`PROJECT_STATUS.md`](PROJECT_STATUS.md), [`docs/threat-model.md`](docs/threat-model.md),
-[`docs/evidence-model.md`](docs/evidence-model.md), and [`docs/limitations.md`](docs/limitations.md).
+A real external agent-release pilot has not yet been verified. Stable `v0.1.0` remains gated on
+real-world pilot evidence, resolution of pilot findings, reviewed compatibility decisions, and
+signed or attested release artifacts.
+
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — system boundaries and module structure
+- [`docs/evidence-model.md`](docs/evidence-model.md) — evidence contents and integrity semantics
+- [`docs/threat-model.md`](docs/threat-model.md) — security assumptions and trust boundaries
+- [`docs/limitations.md`](docs/limitations.md) — explicit non-claims and current constraints
+- [`docs/benchmark-card.md`](docs/benchmark-card.md) — benchmark scope and interpretation

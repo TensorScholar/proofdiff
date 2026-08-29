@@ -26,7 +26,7 @@ def wheel_metadata() -> dict[str, bytes]:
     metadata = f"""Metadata-Version: 2.4
 Name: proofdiff
 Version: {VERSION}
-Summary: Change-aware release assurance for AI agents.
+Summary: Evidence-first behavioral change analysis for evolving AI systems.
 Author: Mohammad Atashi
 License-Expression: Apache-2.0
 Requires-Python: >=3.11
@@ -34,8 +34,8 @@ Description-Content-Type: text/markdown
 Project-URL: Homepage, https://github.com/TensorScholar/proofdiff
 Project-URL: Repository, https://github.com/TensorScholar/proofdiff
 
-ProofDiff compares an agent release candidate with a trusted baseline, selects impacted
-behavioral contracts, evaluates deterministic fixture traces, and emits a scoped release decision.
+ProofDiff analyzes baseline/candidate changes in AI-system manifests, selects impacted behavioral
+contracts, evaluates deterministic fixture traces, and emits scoped PASS/REVIEW/BLOCK evidence.
 """.encode()
     wheel = b"Wheel-Version: 1.0\nGenerator: proofdiff-build-dist\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
     entry_points = b"[console_scripts]\nproofdiff = proofdiff.cli.main:main\n"

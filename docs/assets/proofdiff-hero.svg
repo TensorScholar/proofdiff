@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
   <title id="title">ProofDiff</title>
-  <desc id="desc">Change-aware release assurance for AI agents</desc>
+  <desc id="desc">Evidence-first behavioral change analysis for AI systems</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#08111f"/><stop offset="1" stop-color="#13253d"/>
@@ -15,11 +15,11 @@
   </g>
   <text x="90" y="155" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="82" font-weight="700" fill="#f8fbff">ProofDiff</text>
   <rect x="92" y="181" width="510" height="8" rx="4" fill="url(#accent)"/>
-  <text x="92" y="245" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="31" fill="#d7e5f5">Change-aware release assurance for AI agents</text>
+  <text x="92" y="245" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="31" fill="#d7e5f5">Behavioral change evidence for AI systems</text>
   <text x="92" y="300" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="22" fill="#9fb5cd">diff → select → replay → decide → evidence</text>
   <g transform="translate(820 102)">
     <rect x="0" y="0" width="250" height="54" rx="12" fill="#102a43" stroke="#70e1f5"/>
-    <text x="125" y="35" text-anchor="middle" font-family="ui-monospace,monospace" font-size="20" fill="#dff9ff">AGENT CHANGE</text>
+    <text x="125" y="35" text-anchor="middle" font-family="ui-monospace,monospace" font-size="20" fill="#dff9ff">AI SYSTEM CHANGE</text>
     <path d="M125 54V91" stroke="#70e1f5" stroke-width="3"/>
     <rect x="0" y="91" width="250" height="54" rx="12" fill="#102a43" stroke="#ffd194"/>
     <text x="125" y="126" text-anchor="middle" font-family="ui-monospace,monospace" font-size="20" fill="#fff2df">BEHAVIORAL EVIDENCE</text>
