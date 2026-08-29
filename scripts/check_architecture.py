@@ -51,6 +51,16 @@ REQUIRED_ROOT_ENTRIES = frozenset(
         "tests",
     }
 )
+ALLOWED_DOC_ENTRIES = frozenset(
+    {
+        "architecture.md",
+        "assets",
+        "benchmark-card.md",
+        "evidence-model.md",
+        "limitations.md",
+        "threat-model.md",
+    }
+)
 FORBIDDEN_PUBLIC_BASENAMES = frozenset(
     {
         "AGENTS.md",
@@ -73,6 +83,7 @@ FORBIDDEN_PUBLIC_BASENAMES = frozenset(
         "security-audit.md",
     }
 )
+FORBIDDEN_PUBLIC_NAME_TOKENS = ("autopilot", "codex", "handoff", "self_audit", "task_graph")
 
 
 def imported_modules(path: Path) -> list[str]:
@@ -99,17 +110,24 @@ def tracked_paths() -> list[PurePosixPath]:
 def check_public_repository_surface(findings: list[str]) -> None:
     paths = tracked_paths()
     top_level = {path.parts[0] for path in paths if path.parts}
+    docs_entries = {path.parts[1] for path in paths if len(path.parts) >= 2 and path.parts[0] == "docs"}
 
     for entry in sorted(top_level - ALLOWED_ROOT_ENTRIES):
         findings.append(f"repository root contains unapproved public entry: {entry}")
     for entry in sorted(REQUIRED_ROOT_ENTRIES - top_level):
         findings.append(f"repository root is missing required public entry: {entry}")
+    for entry in sorted(docs_entries - ALLOWED_DOC_ENTRIES):
+        findings.append(f"docs contains unapproved public entry: {entry}")
 
     for path in paths:
+        basename = path.name
+        basename_lower = basename.lower()
         if ".axiom" in path.parts:
             findings.append(f"internal AXIOM control-plane artifact must not be tracked: {path}")
-        if path.name in FORBIDDEN_PUBLIC_BASENAMES or path.name.startswith("CODEX_"):
+        if basename in FORBIDDEN_PUBLIC_BASENAMES:
             findings.append(f"internal orchestration/migration artifact must not be public: {path}")
+        if any(token in basename_lower for token in FORBIDDEN_PUBLIC_NAME_TOKENS):
+            findings.append(f"internal tool/handoff artifact must not be public: {path}")
 
 
 def main() -> int:
