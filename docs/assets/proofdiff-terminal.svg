@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="510" viewBox="0 0 1100 510" role="img" aria-labelledby="title desc">
+  <title id="title">ProofDiff terminal report</title><desc id="desc">A blocked release caused by a critical behavioral regression</desc>
+  <rect width="1100" height="510" rx="24" fill="#07111f"/>
+  <rect width="1100" height="52" rx="24" fill="#132235"/><circle cx="35" cy="26" r="7" fill="#ff6b6b"/><circle cx="60" cy="26" r="7" fill="#ffd166"/><circle cx="85" cy="26" r="7" fill="#7bd88f"/>
+  <g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="22" fill="#d8e5f2">
+    <text x="45" y="95" fill="#70e1f5">PROOFDIFF  RELEASE ASSURANCE</text>
+    <text x="45" y="140">Changes</text><text x="270" y="140" fill="#ffd194">3 (high)</text>
+    <text x="45" y="180">Contracts</text><text x="270" y="180">2 / 3 selected</text>
+    <text x="45" y="220">Reduction</text><text x="270" y="220">33.3%</text>
+    <text x="45" y="280">Results</text><text x="270" y="280">1 passed · 1 failed</text>
+    <text x="45" y="335" fill="#ff7b8a" font-size="30" font-weight="700">Decision: BLOCK</text>
+    <text x="45" y="382" fill="#ffb3bd">CRITICAL_CONTRACT_FAILED</text>
+    <text x="45" y="420">refund.requires_confirmation failed</text>
+    <text x="45" y="466" fill="#9fb5cd">Evidence bundle: checksums verified</text>
+  </g>
+</svg>

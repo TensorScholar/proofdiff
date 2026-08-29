@@ -1,0 +1,43 @@
+name: Release artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f54435c9da0 # v6.0.2
+      - uses: actions/setup-python@a309ff8d10b7b0c6c0e286311e22eefd5395d9d8 # v6.2.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e '.[dev,yaml]'
+      - run: ruff format --check .
+      - run: ruff check .
+      - run: mypy src/proofdiff
+      - run: coverage run --branch -m pytest -q
+      - run: coverage report -m
+      - run: python scripts/check_schemas.py
+      - run: python scripts/check_architecture.py
+      - run: python scripts/security_scan.py
+      - run: python -m build
+      - run: twine check dist/*
+      - run: python scripts/check_release.py
+      - run: python scripts/generate_sbom.py
+      - run: python scripts/smoke_install.py
+      - uses: actions/upload-artifact@043fb46c3b796074f0a3998e1c5e27f39d5a2911 # v7.0.1
+        with:
+          name: proofdiff-dist
+          path: dist/*
+      - uses: actions/attest-build-provenance@a1948c6bfb8cba30a3e7e8fefc887f2a3278b8a5 # v4.1.1
+        with:
+          subject-path: dist/*

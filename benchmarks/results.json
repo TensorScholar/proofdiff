@@ -1,0 +1,17 @@
+{
+  "benchmark": "proofdiff-maintained-synthetic-change-selection-v1",
+  "benign_identical_manifest_decision": "PASS",
+  "contracts": 2000,
+  "injected_critical_failure_decision": "BLOCK",
+  "platform": "Linux-6.12.13-x86_64-with-glibc2.41",
+  "python": "3.13.5",
+  "scenarios": 300,
+  "scope": "synthetic manifests and declared contract coverage; not a production workload claim",
+  "seed": 20260728,
+  "selection_latency_ms_median": 0.9423215001334029,
+  "selection_latency_ms_p95": 1.0450279996803147,
+  "selection_recall_mean": 1.0,
+  "selection_recall_min": 1.0,
+  "suite_reduction_mean": 0.9652000000000001,
+  "tools": 200
+}

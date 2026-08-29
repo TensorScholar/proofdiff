@@ -1,0 +1,68 @@
+name: ProofDiff release assurance
+description: Compare agent manifests, select impacted contracts, and produce scoped release evidence.
+inputs:
+  baseline:
+    description: Baseline agent manifest path
+    required: true
+  candidate:
+    description: Candidate agent manifest path
+    required: true
+  contracts:
+    description: Behavioral contracts directory
+    required: true
+  baseline-traces:
+    description: Baseline fixture trace JSONL path
+    required: true
+  candidate-traces:
+    description: Candidate fixture trace JSONL path
+    required: true
+  evidence:
+    description: Evidence output directory
+    required: false
+    default: .proofdiff/evidence
+  policy:
+    description: Optional ProofDiff policy JSON path
+    required: false
+    default: ""
+outputs:
+  decision:
+    description: PASS, REVIEW, BLOCK, or ERROR
+    value: ${{ steps.run.outputs.decision }}
+  exit-code:
+    description: ProofDiff exit code
+    value: ${{ steps.run.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - name: Install the checked-out action source
+      shell: bash
+      run: python -m pip install --disable-pip-version-check "${{ github.action_path }}/../../.."
+    - id: run
+      shell: bash
+      env:
+        PROOFDIFF_POLICY: ${{ inputs.policy }}
+      run: |
+        set +e
+        args=(
+          check
+          --baseline "${{ inputs.baseline }}"
+          --candidate "${{ inputs.candidate }}"
+          --contracts "${{ inputs.contracts }}"
+          --baseline-traces "${{ inputs.baseline-traces }}"
+          --candidate-traces "${{ inputs.candidate-traces }}"
+          --evidence "${{ inputs.evidence }}"
+        )
+        if [ -n "$PROOFDIFF_POLICY" ]; then
+          args+=(--policy "$PROOFDIFF_POLICY")
+        fi
+        proofdiff "${args[@]}"
+        code=$?
+        case "$code" in
+          0) decision=PASS ;;
+          1) decision=REVIEW ;;
+          2) decision=BLOCK ;;
+          *) decision=ERROR ;;
+        esac
+        echo "decision=$decision" >> "$GITHUB_OUTPUT"
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit "$code"
