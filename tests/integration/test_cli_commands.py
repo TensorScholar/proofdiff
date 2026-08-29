@@ -15,80 +15,95 @@ def test_snapshot_diff_select_and_verify_commands(tmp_path: Path, capsys) -> Non
     assert capsys.readouterr().out.startswith("sha256:")
 
     diff_out = tmp_path / "diff.json"
-    assert main(
-        [
-            "diff",
-            "--baseline",
-            str(EXAMPLE / "baseline-manifest.json"),
-            "--candidate",
-            str(EXAMPLE / "candidate-review-manifest.json"),
-            "--out",
-            str(diff_out),
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "diff",
+                "--baseline",
+                str(EXAMPLE / "baseline-manifest.json"),
+                "--candidate",
+                str(EXAMPLE / "candidate-review-manifest.json"),
+                "--out",
+                str(diff_out),
+            ]
+        )
+        == 0
+    )
     assert json.loads(diff_out.read_text(encoding="utf-8"))["changes"]
 
     select_out = tmp_path / "selection.json"
-    assert main(
-        [
-            "select",
-            "--baseline",
-            str(EXAMPLE / "baseline-manifest.json"),
-            "--candidate",
-            str(EXAMPLE / "candidate-review-manifest.json"),
-            "--contracts",
-            str(EXAMPLE / "contracts"),
-            "--out",
-            str(select_out),
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "select",
+                "--baseline",
+                str(EXAMPLE / "baseline-manifest.json"),
+                "--candidate",
+                str(EXAMPLE / "candidate-review-manifest.json"),
+                "--contracts",
+                str(EXAMPLE / "contracts"),
+                "--out",
+                str(select_out),
+            ]
+        )
+        == 0
+    )
     assert json.loads(select_out.read_text(encoding="utf-8"))["selected_ids"]
 
     evidence = tmp_path / "evidence"
-    assert main(
-        [
-            "check",
-            "--baseline",
-            str(EXAMPLE / "baseline-manifest.json"),
-            "--candidate",
-            str(EXAMPLE / "candidate-block-manifest.json"),
-            "--contracts",
-            str(EXAMPLE / "contracts"),
-            "--baseline-traces",
-            str(EXAMPLE / "traces" / "baseline.jsonl"),
-            "--candidate-traces",
-            str(EXAMPLE / "traces" / "candidate-block.jsonl"),
-            "--evidence",
-            str(evidence),
-        ]
-    ) == 2
+    assert (
+        main(
+            [
+                "check",
+                "--baseline",
+                str(EXAMPLE / "baseline-manifest.json"),
+                "--candidate",
+                str(EXAMPLE / "candidate-block-manifest.json"),
+                "--contracts",
+                str(EXAMPLE / "contracts"),
+                "--baseline-traces",
+                str(EXAMPLE / "traces" / "baseline.jsonl"),
+                "--candidate-traces",
+                str(EXAMPLE / "traces" / "candidate-block.jsonl"),
+                "--evidence",
+                str(evidence),
+            ]
+        )
+        == 2
+    )
     capsys.readouterr()
     assert main(["verify", "--evidence", str(evidence)]) == 0
     assert "Verified" in capsys.readouterr().out
 
 
 def test_cli_prints_json_when_no_output_file(capsys) -> None:  # type: ignore[no-untyped-def]
-    assert main(
-        [
-            "diff",
-            "--baseline",
-            str(EXAMPLE / "baseline-manifest.json"),
-            "--candidate",
-            str(EXAMPLE / "candidate-review-manifest.json"),
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "diff",
+                "--baseline",
+                str(EXAMPLE / "baseline-manifest.json"),
+                "--candidate",
+                str(EXAMPLE / "candidate-review-manifest.json"),
+            ]
+        )
+        == 0
+    )
     assert '"changes"' in capsys.readouterr().out
-    assert main(
-        [
-            "select",
-            "--baseline",
-            str(EXAMPLE / "baseline-manifest.json"),
-            "--candidate",
-            str(EXAMPLE / "candidate-review-manifest.json"),
-            "--contracts",
-            str(EXAMPLE / "contracts"),
-        ]
-    ) == 0
+    assert (
+        main(
+            [
+                "select",
+                "--baseline",
+                str(EXAMPLE / "baseline-manifest.json"),
+                "--candidate",
+                str(EXAMPLE / "candidate-review-manifest.json"),
+                "--contracts",
+                str(EXAMPLE / "contracts"),
+            ]
+        )
+        == 0
+    )
     assert '"selected_ids"' in capsys.readouterr().out
 
 

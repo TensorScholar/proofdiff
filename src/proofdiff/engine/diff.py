@@ -35,11 +35,11 @@ def _compare_lower_bound(
     new = after.get(key)
     if old == new:
         return
-    if old is None and isinstance(new, (int, float)):
+    if old is None and isinstance(new, int | float):
         restrictions.append(f"{path}{key} added: {new}")
-    elif new is None and isinstance(old, (int, float)):
+    elif new is None and isinstance(old, int | float):
         expansions.append(f"{path}{key} removed")
-    elif isinstance(old, (int, float)) and isinstance(new, (int, float)):
+    elif isinstance(old, int | float) and isinstance(new, int | float):
         if new < old:
             expansions.append(f"{path}{key} lowered from {old} to {new}")
         elif new > old:
@@ -58,11 +58,11 @@ def _compare_upper_bound(
     new = after.get(key)
     if old == new:
         return
-    if old is None and isinstance(new, (int, float)):
+    if old is None and isinstance(new, int | float):
         restrictions.append(f"{path}{key} added: {new}")
-    elif new is None and isinstance(old, (int, float)):
+    elif new is None and isinstance(old, int | float):
         expansions.append(f"{path}{key} removed")
-    elif isinstance(old, (int, float)) and isinstance(new, (int, float)):
+    elif isinstance(old, int | float) and isinstance(new, int | float):
         if new > old:
             expansions.append(f"{path}{key} raised from {old} to {new}")
         elif new < old:
@@ -221,9 +221,7 @@ def _schema_directions(
         "maxProperties",
     }
     changed_unknown = sorted(
-        key
-        for key in (set(before) | set(after)) - recognized
-        if before.get(key) != after.get(key)
+        key for key in (set(before) | set(after)) - recognized if before.get(key) != after.get(key)
     )
     if changed_unknown:
         summary = f"{prefix}unclassified schema keywords changed: {', '.join(changed_unknown)}"
@@ -347,9 +345,7 @@ def compare_manifests(baseline: dict[str, Any], candidate: dict[str, Any]) -> Ch
         if old_safety != new_safety:
             old_rank = _RISK_RANK.get(str(old_safety["risk"]), 0)
             new_rank = _RISK_RANK.get(str(new_safety["risk"]), 0)
-            weakened = new_rank < old_rank or (
-                bool(old_safety["destructive"]) and not bool(new_safety["destructive"])
-            )
+            weakened = new_rank < old_rank or (bool(old_safety["destructive"]) and not bool(new_safety["destructive"]))
             changes.append(
                 Change(
                     ChangeType.TOOL_SAFETY_METADATA_CHANGED,
@@ -376,9 +372,7 @@ def compare_manifests(baseline: dict[str, Any], candidate: dict[str, Any]) -> Ch
                 reasons = restrictions
             else:
                 change_type = ChangeType.TOOL_SCHEMA_CHANGED
-                reasons = expansions + restrictions or [
-                    "schema changed without a recognized semantic direction"
-                ]
+                reasons = expansions + restrictions or ["schema changed without a recognized semantic direction"]
             changes.append(
                 Change(
                     change_type,
@@ -481,11 +475,7 @@ def compare_manifests(baseline: dict[str, Any], candidate: dict[str, Any]) -> Ch
     if baseline_runtime != candidate_runtime:
         known = {"provider", "model"}
         runtime_keys = set(baseline_runtime) | set(candidate_runtime)
-        if any(
-            baseline_runtime.get(key) != candidate_runtime.get(key)
-            for key in runtime_keys
-            if key not in known
-        ):
+        if any(baseline_runtime.get(key) != candidate_runtime.get(key) for key in runtime_keys if key not in known):
             changes.append(
                 Change(
                     ChangeType.RUNTIME_CONFIG_CHANGED,

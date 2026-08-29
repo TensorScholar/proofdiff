@@ -92,7 +92,7 @@ def _mapping_numbers(value: Any, field: str) -> dict[str, float]:
             not isinstance(key, str)
             or not key
             or key != key.strip()
-            or not isinstance(item, (int, float))
+            or not isinstance(item, int | float)
             or isinstance(item, bool)
         ):
             raise InputError(f"{field} entries must map strings to numbers; keys must be trimmed and values finite")
@@ -187,9 +187,7 @@ def parse_contract(value: dict[str, Any], source: str) -> Contract:
     if conflicting_tools:
         raise InputError(f"contract requires and forbids the same tools in {source}: {', '.join(conflicting_tools)}")
     impossible_required = sorted(
-        tool
-        for tool in expectations.required_tools
-        if expectations.max_tool_calls.get(tool) == 0
+        tool for tool in expectations.required_tools if expectations.max_tool_calls.get(tool) == 0
     )
     if impossible_required:
         raise InputError(f"required tools have a zero call budget in {source}: {', '.join(impossible_required)}")
@@ -259,9 +257,7 @@ def load_contracts(directory: str | Path) -> list[Contract]:
     paths = sorted(
         path
         for path in root.rglob("*")
-        if path.is_file()
-        and not path.is_symlink()
-        and path.suffix.lower() in {".json", ".yaml", ".yml"}
+        if path.is_file() and not path.is_symlink() and path.suffix.lower() in {".json", ".yaml", ".yml"}
     )
     contracts = [load_contract(path) for path in paths]
     identifiers: set[str] = set()

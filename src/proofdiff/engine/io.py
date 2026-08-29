@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from proofdiff.domain.errors import InputError
 from proofdiff.engine.canonical import normalize
@@ -70,7 +71,7 @@ def _load_yaml(text: str) -> Any:
     except ImportError as exc:
         raise InputError("YAML input requires the optional dependency: pip install 'proofdiff[yaml]'") from exc
 
-    class UniqueKeySafeLoader(yaml.SafeLoader):  # type: ignore[misc, name-defined]
+    class UniqueKeySafeLoader(yaml.SafeLoader):  # type: ignore[misc]
         pass
 
     def construct_mapping(loader: Any, node: Any, deep: bool = False) -> dict[str, Any]:
@@ -78,7 +79,7 @@ def _load_yaml(text: str) -> Any:
         pairs = loader.construct_pairs(node, deep=deep)
         return _unique_object(pairs)
 
-    UniqueKeySafeLoader.add_constructor(  # type: ignore[attr-defined]
+    UniqueKeySafeLoader.add_constructor(
         yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
         construct_mapping,
     )
@@ -142,13 +143,16 @@ def _atomic_write_text(target: Path, payload: str) -> None:
 def write_json(path: str | Path, value: Any) -> None:
     target = Path(path)
     normalized = normalize(value)
-    payload = json.dumps(
-        normalized,
-        indent=2,
-        sort_keys=True,
-        ensure_ascii=False,
-        allow_nan=False,
-    ) + "\n"
+    payload = (
+        json.dumps(
+            normalized,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+            allow_nan=False,
+        )
+        + "\n"
+    )
     _atomic_write_text(target, payload)
 
 

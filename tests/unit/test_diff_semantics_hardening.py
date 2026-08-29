@@ -41,11 +41,7 @@ def _manifest(schema: dict[str, object] | None = None) -> dict[str, object]:
 def _schema_change(before_schema: dict[str, object], after_schema: dict[str, object]):
     before = _manifest(before_schema)
     after = _manifest(after_schema)
-    return next(
-        item
-        for item in compare_manifests(before, after).changes
-        if item.path == "tools.refund.input_schema"
-    )
+    return next(item for item in compare_manifests(before, after).changes if item.path == "tools.refund.input_schema")
 
 
 def test_agent_policy_safety_and_extra_configuration_changes_are_conservative() -> None:
@@ -63,9 +59,7 @@ def test_agent_policy_safety_and_extra_configuration_changes_are_conservative() 
     assert by_type[ChangeType.AGENT_CONFIG_CHANGED].severity is Severity.HIGH
     assert by_type[ChangeType.TOOL_SAFETY_METADATA_CHANGED].severity is Severity.CRITICAL
     assert by_type[ChangeType.TOOL_SAFETY_METADATA_CHANGED].metadata["metadata_weakened"] is True
-    assert by_type[ChangeType.TOOL_CONFIGURATION_CHANGED].metadata["changed_fields"] == [
-        "timeout_seconds"
-    ]
+    assert by_type[ChangeType.TOOL_CONFIGURATION_CHANGED].metadata["changed_fields"] == ["timeout_seconds"]
     assert by_type[ChangeType.POLICY_SCOPE_EXPANDED].severity is Severity.CRITICAL
 
 
@@ -150,7 +144,7 @@ def test_schema_depth_limit_falls_back_to_bidirectional_review() -> None:
     after: dict[str, object] = {"type": "object"}
     left = before
     right = after
-    for index in range(19):
+    for _index in range(19):
         left["properties"] = {"x": {"type": "object"}}
         right["properties"] = {"x": {"type": "object"}}
         left = left["properties"]["x"]  # type: ignore[index,assignment]

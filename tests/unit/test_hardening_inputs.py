@@ -114,9 +114,7 @@ def test_secret_protection_preserves_schema_names_and_detects_changes() -> None:
     protected_schema = validate_manifest(manifest_with_schema_secret)["tools"][0]["input_schema"]
     secret_property = protected_schema["properties"]["access_token"]
     assert secret_property["default"] == {"$secret_digest": digest("schema-secret")}
-    assert secret_property["examples"] == {
-        "$secret_digest": digest(["another-schema-secret"])
-    }
+    assert secret_property["examples"] == {"$secret_digest": digest(["another-schema-secret"])}
 
     changed = json.loads(json.dumps(manifest))
     changed["runtime"]["api_token"] = "different-secret"  # type: ignore[index]

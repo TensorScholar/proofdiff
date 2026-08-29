@@ -3,9 +3,7 @@ from __future__ import annotations
 from proofdiff.domain.models import Comparison, ContractResult, ResultStatus
 
 
-def compare_results(
-    baseline: list[ContractResult], candidate: list[ContractResult]
-) -> list[Comparison]:
+def compare_results(baseline: list[ContractResult], candidate: list[ContractResult]) -> list[Comparison]:
     baseline_by_id = {item.contract_id: item for item in baseline}
     candidate_by_id = {item.contract_id: item for item in candidate}
     comparisons: list[Comparison] = []

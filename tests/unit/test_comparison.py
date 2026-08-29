@@ -23,9 +23,7 @@ def result(identifier: str, status: ResultStatus) -> ContractResult:
         (ResultStatus.FAIL, ResultStatus.MISSING, "changed"),
     ],
 )
-def test_comparison_classifications(
-    before: ResultStatus, after: ResultStatus, expected: str
-) -> None:
+def test_comparison_classifications(before: ResultStatus, after: ResultStatus, expected: str) -> None:
     comparison = compare_results([result("x", before)], [result("x", after)])[0]
     assert comparison.classification == expected
 

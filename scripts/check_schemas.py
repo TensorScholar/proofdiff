@@ -16,11 +16,7 @@ def validate(schema_name: str, paths: list[Path], *, jsonl: bool = False) -> Non
     validator = Draft202012Validator(load(ROOT / "schemas" / schema_name))
     for path in paths:
         if jsonl:
-            values = [
-                json.loads(line)
-                for line in path.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
+            values = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
         else:
             values = [load(path)]
         for index, value in enumerate(values):

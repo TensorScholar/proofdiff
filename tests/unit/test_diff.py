@@ -57,9 +57,7 @@ def test_added_destructive_tool_is_critical() -> None:
     candidate = {
         "agent": {"name": "a"},
         "runtime": {},
-        "tools": [
-            {"name": "delete", "destructive": True, "input_schema": {"type": "object"}}
-        ],
+        "tools": [{"name": "delete", "destructive": True, "input_schema": {"type": "object"}}],
     }
     changes = compare_manifests(baseline, candidate).changes
     assert changes[0].type is ChangeType.TOOL_ADDED

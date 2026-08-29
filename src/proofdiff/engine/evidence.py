@@ -67,8 +67,6 @@ class EvidenceInputs:
     policy: dict[str, bool] = field(default_factory=dict)
 
 
-
-
 def _validate_evidence_inputs(inputs: EvidenceInputs) -> None:
     protected_baseline = validate_manifest(inputs.baseline_manifest)
     protected_candidate = validate_manifest(inputs.candidate_manifest)
@@ -275,12 +273,7 @@ def verify_evidence_bundle(destination: str | Path) -> list[str]:
         expected, relative = parts
         if CHECKSUM_RE.fullmatch(expected) is None:
             raise VerificationError(f"invalid sha256 digest on line {line_number}")
-        if (
-            not relative
-            or relative in {".", "..", "checksums.txt"}
-            or "/" in relative
-            or "\\" in relative
-        ):
+        if not relative or relative in {".", "..", "checksums.txt"} or "/" in relative or "\\" in relative:
             raise VerificationError(f"unsafe evidence path on line {line_number}")
         if relative in seen:
             raise VerificationError(f"duplicate checksum entry: {relative}")

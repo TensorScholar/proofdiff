@@ -29,7 +29,7 @@ def _number_map(value: Any, field: str) -> dict[str, float]:
             not isinstance(key, str)
             or not key
             or key != key.strip()
-            or not isinstance(item, (int, float))
+            or not isinstance(item, int | float)
             or isinstance(item, bool)
         ):
             raise InputError(f"{field} must map strings to numbers; keys must be trimmed and values finite")
@@ -61,9 +61,7 @@ def parse_trace(value: dict[str, Any], source: str) -> TraceRecord:
         allowed_event = {"type", "name", "content", "arguments", "metadata"}
         unknown_event = sorted(set(raw) - allowed_event)
         if unknown_event:
-            raise InputError(
-                f"trace event contains unknown fields: {source} event {index}: {', '.join(unknown_event)}"
-            )
+            raise InputError(f"trace event contains unknown fields: {source} event {index}: {', '.join(unknown_event)}")
         event_type = raw.get("type")
         if (
             not isinstance(event_type, str)
@@ -76,12 +74,7 @@ def parse_trace(value: dict[str, Any], source: str) -> TraceRecord:
         content = raw.get("content")
         arguments = raw.get("arguments", {})
         metadata = raw.get("metadata", {})
-        if name is not None and (
-            not isinstance(name, str)
-            or not name
-            or name != name.strip()
-            or len(name) > 256
-        ):
+        if name is not None and (not isinstance(name, str) or not name or name != name.strip() or len(name) > 256):
             raise InputError(f"trace event name must be a trimmed string up to 256 chars: {source} event {index}")
         if content is not None and not isinstance(content, str):
             raise InputError(f"trace event content must be a string: {source} event {index}")

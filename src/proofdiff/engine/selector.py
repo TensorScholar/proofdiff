@@ -60,13 +60,13 @@ def select_contracts(changeset: ChangeSet, contracts: list[Contract]) -> Selecti
                 reasons_by_id.setdefault(contract.id, set()).add("fail_safe_fallback")
 
     selected = tuple(sorted(reasons_by_id))
-    reasons = tuple(
+    selection_reasons = tuple(
         SelectionReason(contract_id=contract_id, reasons=tuple(sorted(reasons_by_id[contract_id])))
         for contract_id in selected
     )
     return Selection(
         selected_ids=selected,
-        reasons=reasons,
+        reasons=selection_reasons,
         uncovered_changes=tuple(uncovered),
         fallback_applied=fallback,
         total_contracts=len(contracts),

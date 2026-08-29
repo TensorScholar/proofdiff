@@ -129,9 +129,10 @@ def load_manifest(path: str | Path) -> dict[str, Any]:
 
 def snapshot_manifest(source: str | Path, destination: str | Path) -> str:
     manifest = load_manifest(source)
-    payload = {"schema_version": "1", "digest": digest(manifest), "manifest": manifest}
+    manifest_digest = digest(manifest)
+    payload = {"schema_version": "1", "digest": manifest_digest, "manifest": manifest}
     write_json(destination, payload)
-    return payload["digest"]
+    return manifest_digest
 
 
 def unwrap_snapshot(value: dict[str, Any]) -> dict[str, Any]:

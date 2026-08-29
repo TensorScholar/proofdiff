@@ -7,7 +7,7 @@ from typing import Any
 JSON = dict[str, Any]
 
 
-class Risk(str, Enum):
+class Risk(str, Enum):  # noqa: UP042 - preserve existing enum string semantics
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
@@ -18,7 +18,7 @@ class Risk(str, Enum):
         return {Risk.LOW: 1, Risk.MEDIUM: 2, Risk.HIGH: 3, Risk.CRITICAL: 4}[self]
 
 
-class Severity(str, Enum):
+class Severity(str, Enum):  # noqa: UP042 - preserve existing enum string semantics
     INFO = "info"
     LOW = "low"
     MEDIUM = "medium"
@@ -36,7 +36,7 @@ class Severity(str, Enum):
         }[self]
 
 
-class ChangeType(str, Enum):
+class ChangeType(str, Enum):  # noqa: UP042 - preserve existing enum string semantics
     AGENT_CONFIG_CHANGED = "AGENT_CONFIG_CHANGED"
     MODEL_CHANGED = "MODEL_CHANGED"
     PROVIDER_CHANGED = "PROVIDER_CHANGED"
@@ -58,13 +58,13 @@ class ChangeType(str, Enum):
     UNCLASSIFIED_CHANGE = "UNCLASSIFIED_CHANGE"
 
 
-class DecisionStatus(str, Enum):
+class DecisionStatus(str, Enum):  # noqa: UP042 - preserve existing enum string semantics
     PASS = "PASS"
     REVIEW = "REVIEW"
     BLOCK = "BLOCK"
 
 
-class ResultStatus(str, Enum):
+class ResultStatus(str, Enum):  # noqa: UP042 - preserve existing enum string semantics
     PASS = "pass"
     FAIL = "fail"
     MISSING = "missing"

@@ -115,14 +115,14 @@ def evaluate_contract(contract: Contract, trace: TraceRecord | None) -> Contract
             )
         )
 
-    for metric, maximum in contract.expectations.budgets.items():
+    for metric, budget_limit in contract.expectations.budgets.items():
         actual = trace.metrics.get(metric)
-        passed = actual is not None and actual <= maximum
+        passed = actual is not None and actual <= budget_limit
         assertions.append(
             AssertionResult(
                 f"budget:{metric}",
                 passed,
-                f"observed {actual!r}, maximum {maximum}",
+                f"observed {actual!r}, maximum {budget_limit}",
             )
         )
 

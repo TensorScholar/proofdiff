@@ -56,17 +56,13 @@ def _validate_inputs(
         raise InputError("candidate results contain duplicate contract ids")
     unknown_candidate_ids = sorted(set(candidate_ids) - selected)
     if unknown_candidate_ids:
-        raise InputError(
-            f"candidate results reference unselected contracts: {', '.join(unknown_candidate_ids)}"
-        )
+        raise InputError(f"candidate results reference unselected contracts: {', '.join(unknown_candidate_ids)}")
     comparison_ids = [item.contract_id for item in comparisons]
     if len(set(comparison_ids)) != len(comparison_ids):
         raise InputError("comparisons contain duplicate contract ids")
     unknown_comparison_ids = sorted(set(comparison_ids) - selected)
     if unknown_comparison_ids:
-        raise InputError(
-            f"comparisons reference unselected contracts: {', '.join(unknown_comparison_ids)}"
-        )
+        raise InputError(f"comparisons reference unselected contracts: {', '.join(unknown_comparison_ids)}")
     if selection.total_contracts < len(selection.selected_ids):
         raise InputError("selection total_contracts is smaller than selected contract count")
     invalid_uncovered = [
@@ -134,8 +130,8 @@ def decide(
             )
 
     if effective["block_on_new_critical_regression"]:
-        for item in comparisons:
-            if item.risk is Risk.CRITICAL and item.classification in {
+        for comparison in comparisons:
+            if comparison.risk is Risk.CRITICAL and comparison.classification in {
                 "new_regression",
                 "candidate_missing",
                 "newly_covered_failure",
@@ -144,8 +140,8 @@ def decide(
                     block_reasons,
                     DecisionReason(
                         "NEW_CRITICAL_REGRESSION",
-                        f"critical behavior regressed: {item.contract_id}",
-                        (f"comparison:{item.contract_id}",),
+                        f"critical behavior regressed: {comparison.contract_id}",
+                        (f"comparison:{comparison.contract_id}",),
                     ),
                 )
 

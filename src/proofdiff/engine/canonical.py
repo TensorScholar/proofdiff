@@ -33,7 +33,7 @@ SAFE_SECRET_REFERENCE_PREFIXES = (
 def normalize(value: Any, *, _depth: int = 0) -> Any:
     if _depth > MAX_DEPTH:
         raise InputError(f"document nesting exceeds {MAX_DEPTH}")
-    if value is None or isinstance(value, (str, bool, int)):
+    if value is None or isinstance(value, str | bool | int):
         return value
     if isinstance(value, float):
         if not math.isfinite(value):

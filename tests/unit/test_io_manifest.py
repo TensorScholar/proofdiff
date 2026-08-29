@@ -67,11 +67,11 @@ def test_manifest_validation_and_snapshot(tmp_path: Path) -> None:
 def test_manifest_validation_errors() -> None:
     with pytest.raises(InputError, match="missing required"):
         validate_manifest({})
-    with pytest.raises(InputError, match="manifest.agent"):
+    with pytest.raises(InputError, match=r"manifest\.agent"):
         validate_manifest({"agent": [], "runtime": {}, "tools": []})
-    with pytest.raises(InputError, match="manifest.runtime"):
+    with pytest.raises(InputError, match=r"manifest\.runtime"):
         validate_manifest({"agent": {}, "runtime": [], "tools": []})
-    with pytest.raises(InputError, match="manifest.tools"):
+    with pytest.raises(InputError, match=r"manifest\.tools"):
         validate_manifest({"agent": {}, "runtime": {}, "tools": {}})
     with pytest.raises(InputError, match="must be an object"):
         validate_manifest({"agent": {}, "runtime": {}, "tools": ["x"]})
