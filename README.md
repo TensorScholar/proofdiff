@@ -1,0 +1,205 @@
+<p align="center">
+  <img src="docs/assets/proofdiff-hero.svg" alt="ProofDiff — change-aware release assurance for AI agents" width="100%" />
+</p>
+
+<p align="center"><strong>Know what changed. Test what matters. Ship with evidence.</strong></p>
+
+<p align="center">
+  <a href="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/TensorScholar/proofdiff/ci.yml?branch=main&label=CI"></a>
+  <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
+  <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB">
+  <img alt="release candidate" src="https://img.shields.io/badge/status-release%20candidate-orange">
+</p>
+
+ProofDiff is a local-first release-assurance tool for AI agents. It compares a candidate with a
+trusted baseline, classifies the changed behavioral surface, selects contracts linked to that
+surface, replays deterministic fixture traces, and emits a scoped **PASS**, **REVIEW**, or
+**BLOCK** decision with a closed-set evidence bundle.
+
+It is deliberately narrower than a general evaluation platform: ProofDiff answers one operational
+question—**what evidence should block or review this agent release because of what changed?**
+
+## Why it exists
+
+Agent releases can change behavior through prompts, models, tool descriptions, JSON Schemas, MCP
+servers, policies, retrieval state, source revisions, or runtime configuration. Full regression
+suites are expensive; ad-hoc smoke tests miss blast radius. ProofDiff combines conservative change
+analysis with declared behavioral coverage so CI can run the relevant suite without claiming more
+than the supplied evidence proves.
+
+## Install from a checkout
+
+The release candidate is not advertised as published on PyPI.
+
+```bash
+git clone https://github.com/TensorScholar/proofdiff.git
+cd proofdiff
+python -m pip install -e .
+proofdiff --version
+```
+
+Run the included unsafe-candidate example:
+
+```bash
+proofdiff check \
+  --baseline examples/support-agent/baseline-manifest.json \
+  --candidate examples/support-agent/candidate-block-manifest.json \
+  --contracts examples/support-agent/contracts \
+  --baseline-traces examples/support-agent/traces/baseline.jsonl \
+  --candidate-traces examples/support-agent/traces/candidate-block.jsonl \
+  --policy examples/support-agent/policy.json \
+  --evidence .proofdiff/evidence/demo
+```
+
+Expected exit code: `2` (`BLOCK`). Then verify the bundle:
+
+```bash
+proofdiff verify --evidence .proofdiff/evidence/demo
+```
+
+## Release path
+
+```mermaid
+flowchart LR
+  B[Baseline manifest] --> D[Conservative semantic diff]
+  C[Candidate manifest] --> D
+  D --> S[Impact-based contract selection]
+  S --> R[Deterministic fixture replay]
+  R --> P[Paired comparison]
+  P --> G[PASS · REVIEW · BLOCK]
+  G --> E[Closed-set evidence bundle]
+```
+
+### Change intelligence
+
+ProofDiff recognizes:
+
+- agent identity/configuration, instructions, model, provider, and runtime changes;
+- tool addition/removal, descriptions, safety metadata, opaque configuration, and input schemas;
+- schema expansion, restriction, and mixed/unknown semantic changes;
+- MCP, policy, retrieval, source, environment, and unclassified manifest changes;
+- policy scope expansion as a critical change.
+
+Unknown high-impact changes trigger fail-safe suite expansion rather than optimistic selection.
+
+### Behavioral contracts
+
+```json
+{
+  "id": "refund.requires_confirmation",
+  "risk": "critical",
+  "always_run": true,
+  "covers": {
+    "tools": ["refund_order"],
+    "change_types": ["TOOL_INPUT_SCHEMA_EXPANDED"]
+  },
+  "expect": {
+    "required_sequence": [
+      "tool_call:lookup_order",
+      "approval:refund_order",
+      "tool_call:refund_order"
+    ],
+    "max_tool_calls": {"refund_order": 1}
+  }
+}
+```
+
+Contracts support trajectory subsequences, required/forbidden tools, call ceilings, output
+fragments, minimum output length, and numeric budgets. Critical contracts are always selected.
+Critical release decisions do not depend on an LLM judge.
+
+## Decision semantics
+
+| Decision | Meaning |
+|---|---|
+| `PASS` | Selected, supplied evidence satisfies the effective policy. |
+| `REVIEW` | Evidence is incomplete, a high-impact capability changed, fallback selection ran, or a noncritical contract did not pass. |
+| `BLOCK` | A configured critical failure, missing trace, or critical regression occurred. |
+
+Exit codes are stable: `0` PASS, `1` REVIEW, `2` BLOCK, `3` input/integrity error.
+
+## Evidence model
+
+Every successful run creates only the following files:
+
+```text
+evidence/
+├── baseline-manifest.json
+├── candidate-manifest.json
+├── changeset.json
+├── selection.json
+├── selected-contracts.jsonl
+├── baseline-results.jsonl
+├── candidate-results.jsonl
+├── comparisons.jsonl
+├── trace-digests.json
+├── policy.json
+├── decision.json
+├── claims.json
+├── provenance.json
+├── report.md
+└── checksums.txt
+```
+
+Verification rejects missing, modified, duplicate, symlinked, path-traversing, or unexpected files.
+The bundle records selected contracts, effective policy, canonical trace digests, scoped claims,
+and explicit limitations. Checksums establish post-generation integrity—not publisher identity.
+Use a signed release or artifact attestation when authenticity matters.
+
+## Input and secret handling
+
+- strict JSON rejects duplicate keys and non-finite values;
+- optional YAML uses safe loading and rejects duplicate keys;
+- manifests, contracts, traces, and policies reject malformed or ambiguous structures;
+- size, depth, event, metric, and record limits bound local processing;
+- raw secret-like configuration values are replaced by one-way digests before persistence;
+- credential defaults/examples inside secret-like tool-schema properties are also protected;
+- fixture replay makes no network calls and executes no code from input artifacts.
+
+Do not place production secrets in test fixtures. One-way protection reduces accidental persistence;
+it is not a secret-management system.
+
+## Measured repository benchmark
+
+The maintained synthetic benchmark uses 300 deterministic scenarios, 2,000 declared contracts,
+and 200 tools. It measures consistency with its own declared tool-to-contract oracle—not
+production safety or general semantic recall. The recorded artifact reports 100% declared-coverage
+recall, approximately 96.5% mean suite reduction, a PASS for identical manifests, and a BLOCK for
+an injected critical failure. See [`docs/benchmark-card.md`](docs/benchmark-card.md).
+
+These are not claims about production workloads.
+
+## Architecture
+
+ProofDiff is a dependency-light modular monolith:
+
+```text
+CLI / files
+    ↓
+application pipeline
+    ↓
+canonicalization → manifest diff → contract selection → fixture replay
+    → result comparison → decision policy → evidence generation
+```
+
+The functional core is deterministic; filesystem and CLI behavior remain at the imperative shell.
+See [`docs/architecture.md`](docs/architecture.md).
+
+## What ProofDiff is not
+
+- not a runtime authorization gateway or credential broker;
+- not a sandbox, provider firewall, or secret manager;
+- not a hosted dashboard or observability backend;
+- not proof that an agent is safe, correct, compliant, or regression-free;
+- not a substitute for live integration, adversarial, security, or human review.
+
+## Release status
+
+`0.1.0rc2` is an engineering release candidate. The source package includes deterministic tests,
+branch-aware coverage enforcement, schema checks, a reproducible local build path, clean-wheel
+smoke testing, CI/CodeQL workflows, a threat model, and migration instructions. External Linux
+matrix CI, dependency audit, standard PEP 517 build/twine validation, and a real pilot remain
+release gates until independently executed on the migration branch.
+
+Read [`PROJECT_STATUS.md`](PROJECT_STATUS.md), [`docs/threat-model.md`](docs/threat-model.md),
+[`docs/evidence-model.md`](docs/evidence-model.md), and [`docs/limitations.md`](docs/limitations.md).
