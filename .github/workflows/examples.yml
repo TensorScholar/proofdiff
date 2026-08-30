@@ -1,0 +1,46 @@
+name: Conformance examples
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  examples:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e .
+      - name: Assert unsafe candidate is blocked
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline examples/support-agent/baseline-manifest.json \
+            --candidate examples/support-agent/candidate-block-manifest.json \
+            --contracts examples/support-agent/contracts \
+            --baseline-traces examples/support-agent/traces/baseline.jsonl \
+            --candidate-traces examples/support-agent/traces/candidate-block.jsonl \
+            --evidence .proofdiff/evidence/blocked
+          code=$?
+          test "$code" -eq 2
+      - name: Assert high-risk change requests review
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline examples/support-agent/baseline-manifest.json \
+            --candidate examples/support-agent/candidate-review-manifest.json \
+            --contracts examples/support-agent/contracts \
+            --baseline-traces examples/support-agent/traces/baseline.jsonl \
+            --candidate-traces examples/support-agent/traces/candidate-review.jsonl \
+            --evidence .proofdiff/evidence/review
+          code=$?
+          test "$code" -eq 1

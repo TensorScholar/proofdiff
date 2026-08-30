@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TensorScholar/proofdiff/schemas/trace.schema.json",
+  "title": "ProofDiff Fixture Trace Record",
+  "type": "object",
+  "required": ["case_id", "events"],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,127}$"
+    },
+    "events": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"type": "string", "minLength": 1, "maxLength": 128},
+          "name": {"type": "string", "minLength": 1, "maxLength": 256},
+          "content": {"type": "string", "maxLength": 1000000},
+          "arguments": {"type": "object"},
+          "metadata": {"type": "object"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "output": {"type": "string", "maxLength": 1000000},
+    "metrics": {
+      "type": "object",
+      "maxProperties": 1000,
+      "propertyNames": {"minLength": 1},
+      "additionalProperties": {"type": "number"}
+    },
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": false
+}

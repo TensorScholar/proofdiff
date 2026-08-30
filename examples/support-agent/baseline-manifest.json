@@ -1,0 +1,38 @@
+{
+  "agent": {"name": "support-agent", "version": "baseline"},
+  "runtime": {"provider": "fixture", "model": "recorded-v1", "temperature": 0},
+  "instructions": "Explain policy, obtain confirmation, then perform destructive actions.",
+  "tools": [
+    {
+      "name": "lookup_order",
+      "description": "Read order status.",
+      "risk": "low",
+      "input_schema": {
+        "type": "object",
+        "properties": {"order_id": {"type": "string"}},
+        "required": ["order_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "refund_order",
+      "description": "Refund an order after explicit user confirmation.",
+      "risk": "critical",
+      "destructive": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "order_id": {"type": "string"},
+          "reason": {"type": "string", "enum": ["duplicate", "damaged"]},
+          "confirmed": {"type": "boolean"}
+        },
+        "required": ["order_id", "reason", "confirmed"],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "mcp": {"protocol_version": "2025-11-25", "servers": [{"name": "commerce", "digest": "sha256:baseline"}]},
+  "policy": {"digest": "sha256:policy-v1"},
+  "retrieval": {"corpus_digest": "sha256:kb-v1"},
+  "source": {"commit": "baseline"}
+}

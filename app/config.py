@@ -1,2 +1,0 @@
-SERVICE_NAME = "axiom"
-HEALTH_STATUS = "ok"

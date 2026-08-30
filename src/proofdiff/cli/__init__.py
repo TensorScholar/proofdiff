@@ -1,0 +1,1 @@
+"""ProofDiff command-line interface."""
