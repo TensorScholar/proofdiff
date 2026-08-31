@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use ProofDiff, cite this software."
 title: "ProofDiff"
-version: 0.1.0rc2
+version: 0.1.0rc3
 type: software
 authors:
   - family-names: Atashi

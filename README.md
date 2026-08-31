@@ -195,7 +195,7 @@ See [`docs/architecture.md`](docs/architecture.md).
 
 ## Release status
 
-`0.1.0rc2` is an engineering release candidate, not a production-readiness claim. Release-candidate
+`0.1.0rc3` is an engineering release candidate, not a production-readiness claim. Release-candidate
 validation includes public Linux CI on Python 3.11, 3.12, 3.13, and 3.14; Ruff; strict mypy;
 branch-aware coverage enforcement; schema, architecture, and security checks; `pip-audit`; CodeQL;
 standard PEP 517 build and Twine validation; clean-wheel smoke installation; and conformance
