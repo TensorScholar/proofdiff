@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import re
 import tarfile
+import tomllib
 import xml.etree.ElementTree as ET
+import zipfile
+from email import policy
+from email.parser import BytesParser
 from pathlib import Path
 
+import pytest
 import yaml
-from scripts import build_dist
+from scripts import build_dist, check_release, smoke_install
 
 from proofdiff._version import __version__
 
@@ -50,39 +55,75 @@ def test_readme_stays_focused() -> None:
     assert "not claims about production workloads" in readme
 
 
-def test_deterministic_wheel_uses_valid_license_metadata_version() -> None:
-    metadata_files = {
-        path: data.decode("utf-8") for path, data in build_dist.wheel_metadata().items() if path.endswith("/METADATA")
-    }
-    assert len(metadata_files) == 1
-    metadata = next(iter(metadata_files.values()))
-    assert metadata.startswith("Metadata-Version: 2.4\n")
-    assert "License-Expression: Apache-2.0\n" in metadata
+@pytest.fixture(scope="module")
+def canonical_distributions(tmp_path_factory: pytest.TempPathFactory) -> build_dist.DistributionSet:
+    return build_dist.build_distributions(tmp_path_factory.mktemp("canonical-dist"))
 
 
-def test_deterministic_sdist_contains_pkg_info(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(build_dist, "DIST", tmp_path)
-    sdist = build_dist.build_sdist()
-
-    with tarfile.open(sdist, "r:gz") as archive:
-        member = archive.extractfile(f"proofdiff-{__version__}/PKG-INFO")
-        assert member is not None
-        pkg_info = member.read()
-
-    expected = next(data for path, data in build_dist.wheel_metadata().items() if path.endswith("/METADATA"))
-    assert pkg_info == expected
+def wheel_metadata(wheel: Path):
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_paths = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
+        assert len(metadata_paths) == 1
+        return BytesParser(policy=policy.default).parsebytes(archive.read(metadata_paths[0]))
 
 
-def test_deterministic_sdist_excludes_local_build_artifacts() -> None:
-    excluded = (
-        Path("src/proofdiff.egg-info/PKG-INFO"),
-        Path("venv/bin/python"),
-        Path(".venv/bin/python"),
-        Path(".proofdiff/evidence/decision.json"),
-        Path(".DS_Store"),
-        Path("src/proofdiff/__pycache__/x.pyc"),
-    )
-    for path in excluded:
-        assert not build_dist.include_in_sdist(path)
+def test_canonical_wheel_metadata_comes_from_pyproject(canonical_distributions: build_dist.DistributionSet) -> None:
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    metadata = wheel_metadata(canonical_distributions.wheel)
+    assert metadata["Name"] == project["name"]
+    assert metadata["Version"] == __version__
+    assert metadata["Summary"] == project["description"]
+    assert metadata["Project-URL"] == f"Homepage, {project['urls']['Homepage']}"
+    assert f"Issues, {project['urls']['Issues']}" in metadata.get_all("Project-URL", [])
 
-    assert build_dist.include_in_sdist(Path("src/proofdiff/__init__.py"))
+
+def test_canonical_wheel_declares_yaml_extra(canonical_distributions: build_dist.DistributionSet) -> None:
+    metadata = wheel_metadata(canonical_distributions.wheel)
+    assert "yaml" in metadata.get_all("Provides-Extra", [])
+    requirements = {requirement.replace(" ", "").lower() for requirement in metadata.get_all("Requires-Dist", [])}
+    assert 'pyyaml>=6.0;extra=="yaml"' in requirements
+
+
+def test_canonical_build_emits_exactly_one_wheel_and_sdist(
+    canonical_distributions: build_dist.DistributionSet,
+) -> None:
+    assert {
+        path.name for path in canonical_distributions.output_dir.iterdir()
+    } == build_dist.expected_distribution_names()
+
+
+def test_sdist_contains_documented_runnable_example_helpers(
+    canonical_distributions: build_dist.DistributionSet,
+) -> None:
+    prefix = f"proofdiff-{__version__}/"
+    with tarfile.open(canonical_distributions.sdist, "r:gz") as archive:
+        names = set(archive.getnames())
+    assert prefix + "src/proofdiff/cli/main.py" in names
+    assert prefix + "examples/agentguard-mcp-exit-race/prepare.py" in names
+    assert prefix + "examples/agentguard-mcp-exit-race/verify.py" in names
+
+
+def test_checksum_manifest_covers_every_public_asset(
+    canonical_distributions: build_dist.DistributionSet, tmp_path: Path
+) -> None:
+    for source in (canonical_distributions.wheel, canonical_distributions.sdist):
+        (tmp_path / source.name).write_bytes(source.read_bytes())
+    (tmp_path / build_dist.SBOM_NAME).write_text("{}\n", encoding="utf-8")
+    checksum = build_dist.write_checksum_manifest(tmp_path)
+    build_dist.verify_checksum_manifest(tmp_path)
+    covered = {line.partition("  ")[2] for line in checksum.read_text(encoding="utf-8").splitlines()}
+    assert covered == build_dist.expected_public_asset_names()
+    assert build_dist.CHECKSUM_NAME not in covered
+
+
+def test_invalid_tag_version_mismatch_fails() -> None:
+    with pytest.raises(SystemExit, match="tag/version mismatch"):
+        check_release.check_version_consistency("v0.1.0")
+
+
+def test_current_tag_version_matches() -> None:
+    check_release.check_version_consistency(f"v{__version__}")
+
+
+def test_clean_canonical_wheel_smoke_install(canonical_distributions: build_dist.DistributionSet) -> None:
+    smoke_install.smoke_install(canonical_distributions.wheel)
