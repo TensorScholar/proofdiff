@@ -42,11 +42,27 @@ Pre-registered acceptance criteria:
 - **Phase 2** — translate the frozen historical record into ProofDiff manifests and normalized traces: `prepare.py`.
 - **Phase 3** — run both chronological repair and reverse regression analyses in GitHub CI and assert the pre-registered outcomes.
 
+## Observed Phase 3 result
+
+The registered experiment ran on branch head `d1e3035a307bb0ce1926b68d9f4a687628a77c05` and passed every pre-registered gate:
+
+- one relevant contract selected from ten contracts;
+- relevant-contract recall: `100%`;
+- relevant-contract precision: `100%` within the curated pilot universe;
+- selection reduction: `90%`;
+- fail-safe fallback: not applied;
+- chronological repair (`buggy -> fixed`): candidate contract passed, comparison classified `fixed`, decision `PASS`;
+- reverse regression (`fixed -> buggy`): candidate contract failed, comparison classified `new_regression`, decision `REVIEW`;
+- both closed evidence bundles passed `proofdiff verify`;
+- false `BLOCK`: `0`.
+
+GitHub Actions run `33410266525` validated the conformance pilot; CI run `33410266462` and CodeQL run `33410266580` also completed successfully. The machine-readable observation is recorded in `results.json`.
+
 ## Evidence strength and limitations
 
 This is a **real historical code change** from another repository, but it is not an independent external customer pilot and it does not use live Windows runtime capture. The normalized traces are deterministic reconstructions from the merged PR's documented failure mode, source diff, and regression-test semantics. The ten-contract universe is pilot-curated rather than an imported production regression suite.
 
-Therefore this pilot can test ProofDiff's change selection, paired comparison, decision semantics, and evidence generation on a real cross-repository change. It cannot establish production recall, onboarding cost, live-provider behavior, or external product-market validation.
+Therefore this pilot supports a narrower claim: the current ProofDiff deterministic core selected and classified the pre-registered behavior correctly for this real historical cross-repository change under the curated pilot model. It does **not** establish production recall, onboarding cost, live-provider behavior, independent customer validation, or product-market fit.
 
 Run the pilot from the repository root:
 
