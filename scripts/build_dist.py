@@ -1,171 +1,194 @@
+"""Build and verify ProofDiff's canonical PEP 517 distribution set.
+
+Package metadata and archive construction are owned exclusively by the
+``pyproject.toml`` PEP 517 backend. This script only prepares a dedicated
+release-output directory, invokes that backend, and validates the resulting
+public artifact set.
+
+``SOURCE_DATE_EPOCH`` is passed through to the backend when supplied by CI.
+It stabilizes wheel timestamps with the current backend, but this script does
+not claim byte-for-byte reproducible sdists.
+"""
+
 from __future__ import annotations
 
-import base64
-import gzip
+import argparse
 import hashlib
-import io
-import os
+import re
 import subprocess
-import tarfile
-import zipfile
-from pathlib import Path, PurePosixPath
+import sys
+from dataclasses import dataclass
+from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
-SRC = ROOT / "src"
 DIST = ROOT / "dist"
-VERSION_FILE = SRC / "proofdiff" / "_version.py"
-VERSION = VERSION_FILE.read_text(encoding="utf-8").split('"')[1]
+VERSION_FILE = ROOT / "src" / "proofdiff" / "_version.py"
 DIST_NAME = "proofdiff"
-WHEEL_NAME = f"{DIST_NAME}-{VERSION}-py3-none-any.whl"
-SDIST_NAME = f"{DIST_NAME}-{VERSION}.tar.gz"
-FIXED_TIME = (2026, 1, 1, 0, 0, 0)
+SBOM_NAME = "proofdiff-sbom.cdx.json"
+CHECKSUM_NAME = "SHA256SUMS"
 
 
-def wheel_metadata() -> dict[str, bytes]:
-    dist_info = f"{DIST_NAME}-{VERSION}.dist-info"
-    metadata = f"""Metadata-Version: 2.4
-Name: proofdiff
-Version: {VERSION}
-Summary: Evidence-first behavioral change analysis for evolving AI systems.
-Author: Mohammad Atashi
-License-Expression: Apache-2.0
-Requires-Python: >=3.11
-Description-Content-Type: text/markdown
-Project-URL: Homepage, https://github.com/TensorScholar/proofdiff
-Project-URL: Repository, https://github.com/TensorScholar/proofdiff
+@dataclass(frozen=True)
+class DistributionSet:
+    output_dir: Path
+    wheel: Path
+    sdist: Path
 
-ProofDiff analyzes baseline/candidate changes in AI-system manifests, selects impacted behavioral
-contracts, evaluates deterministic fixture traces, and emits scoped PASS/REVIEW/BLOCK evidence.
-""".encode()
-    wheel = b"Wheel-Version: 1.0\nGenerator: proofdiff-build-dist\nRoot-Is-Purelib: true\nTag: py3-none-any\n"
-    entry_points = b"[console_scripts]\nproofdiff = proofdiff.cli.main:main\n"
+
+def package_version() -> str:
+    return VERSION_FILE.read_text(encoding="utf-8").split('"')[1]
+
+
+def output_directory(path: Path) -> Path:
+    return path if path.is_absolute() else ROOT / path
+
+
+def expected_distribution_names(version: str | None = None) -> set[str]:
+    value = version or package_version()
     return {
-        f"{dist_info}/METADATA": metadata,
-        f"{dist_info}/WHEEL": wheel,
-        f"{dist_info}/entry_points.txt": entry_points,
-        f"{dist_info}/licenses/LICENSE": (ROOT / "LICENSE").read_bytes(),
+        f"{DIST_NAME}-{value}-py3-none-any.whl",
+        f"{DIST_NAME}-{value}.tar.gz",
     }
 
 
-def record_line(path: str, data: bytes) -> str:
-    encoded = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=").decode()
-    return f"{path},sha256={encoded},{len(data)}"
+def expected_public_asset_names(version: str | None = None) -> set[str]:
+    return {*expected_distribution_names(version), SBOM_NAME}
 
 
-def tracked_source_files() -> list[Path]:
-    completed = subprocess.run(
-        ["git", "ls-files", "-z"],
+def expected_release_file_names(version: str | None = None) -> set[str]:
+    return {*expected_public_asset_names(version), CHECKSUM_NAME}
+
+
+def managed_artifact_name(name: str) -> bool:
+    return name in {SBOM_NAME, CHECKSUM_NAME} or bool(re.fullmatch(rf"{DIST_NAME}-.+\.(?:whl|tar\.gz)", name))
+
+
+def prepare_output_directory(path: Path) -> Path:
+    """Create an empty artifact directory without deleting unrelated files."""
+    output = output_directory(path)
+    if output == ROOT or output == ROOT.parent:
+        raise SystemExit(f"refusing to use unsafe release output directory: {output}")
+    if output.exists():
+        if output.is_symlink() or not output.is_dir():
+            raise SystemExit(f"release output directory is unsafe: {output}")
+        children = list(output.iterdir())
+        unsafe = [child for child in children if child.is_symlink() or not child.is_file()]
+        unexpected = [child for child in children if not managed_artifact_name(child.name)]
+        if unsafe or unexpected:
+            names = ", ".join(child.name for child in [*unsafe, *unexpected])
+            raise SystemExit(f"refusing to remove unexpected release-output paths: {names}")
+        for child in children:
+            child.unlink()
+    else:
+        output.mkdir(parents=True, exist_ok=False)
+    return output
+
+
+def regular_files(path: Path) -> dict[str, Path]:
+    output = output_directory(path)
+    if output.is_symlink() or not output.is_dir():
+        raise SystemExit(f"release output directory is missing or unsafe: {output}")
+    files: dict[str, Path] = {}
+    for child in output.iterdir():
+        if child.is_symlink() or not child.is_file():
+            raise SystemExit(f"unexpected non-file in release output: {child.name}")
+        files[child.name] = child
+    return files
+
+
+def require_exact_files(path: Path, expected: set[str]) -> dict[str, Path]:
+    files = regular_files(path)
+    actual = set(files)
+    if actual != expected:
+        missing = sorted(expected - actual)
+        unexpected = sorted(actual - expected)
+        detail = []
+        if missing:
+            detail.append(f"missing: {', '.join(missing)}")
+        if unexpected:
+            detail.append(f"unexpected: {', '.join(unexpected)}")
+        raise SystemExit("release artifact set is invalid (" + "; ".join(detail) + ")")
+    return files
+
+
+def validate_distribution_set(path: Path) -> DistributionSet:
+    output = output_directory(path)
+    files = require_exact_files(output, expected_distribution_names())
+    version = package_version()
+    return DistributionSet(
+        output_dir=output,
+        wheel=files[f"{DIST_NAME}-{version}-py3-none-any.whl"],
+        sdist=files[f"{DIST_NAME}-{version}.tar.gz"],
+    )
+
+
+def build_distributions(path: Path = DIST) -> DistributionSet:
+    output = prepare_output_directory(path)
+    subprocess.run(
+        [sys.executable, "-m", "build", "--outdir", str(output)],
         cwd=ROOT,
         check=True,
-        capture_output=True,
     )
-    files: list[Path] = []
-    for raw in completed.stdout.split(b"\0"):
-        if not raw:
-            continue
-        relative = Path(os.fsdecode(raw))
-        if relative.is_absolute() or ".." in relative.parts:
-            raise RuntimeError(f"unsafe tracked release path: {relative}")
-        path = ROOT / relative
-        if path.is_symlink() or not path.is_file():
-            raise RuntimeError(f"tracked release path is missing or unsafe: {relative.as_posix()}")
-        files.append(path)
-    return sorted(files, key=lambda item: item.relative_to(ROOT).as_posix())
-
-
-def build_wheel() -> Path:
-    DIST.mkdir(exist_ok=True)
-    target = DIST / WHEEL_NAME
-    files: dict[str, bytes] = {}
-    package_root = SRC / "proofdiff"
-    for path in tracked_source_files():
-        if path.is_relative_to(package_root):
-            files[path.relative_to(SRC).as_posix()] = path.read_bytes()
-    files.update(wheel_metadata())
-    dist_info = f"{DIST_NAME}-{VERSION}.dist-info"
-    records = [record_line(path, data) for path, data in sorted(files.items())]
-    records.append(f"{dist_info}/RECORD,,")
-    files[f"{dist_info}/RECORD"] = ("\n".join(records) + "\n").encode()
-    with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for name, data in sorted(files.items()):
-            info = zipfile.ZipInfo(name, FIXED_TIME)
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = 0o644 << 16
-            archive.writestr(info, data)
-    return target
-
-
-def include_in_sdist(path: Path) -> bool:
-    excluded = {
-        ".git",
-        ".pytest_cache",
-        ".mypy_cache",
-        ".ruff_cache",
-        "dist",
-        "build",
-        "__pycache__",
-        ".venv",
-        "venv",
-        ".proofdiff",
-        "htmlcov",
-    }
-    if any(part in excluded or part.endswith(".egg-info") for part in path.parts):
-        return False
-    if path.name in {".coverage", ".DS_Store", "coverage.xml", "coverage.json"}:
-        return False
-    return path.suffix not in {".pyc", ".pyo"}
-
-
-def build_sdist() -> Path:
-    DIST.mkdir(exist_ok=True)
-    target = DIST / SDIST_NAME
-    prefix = PurePosixPath(f"{DIST_NAME}-{VERSION}")
-    raw = io.BytesIO()
-    with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as archive:
-        metadata = next(data for name, data in wheel_metadata().items() if name.endswith("/METADATA"))
-        pkg_info = tarfile.TarInfo(str(prefix / "PKG-INFO"))
-        pkg_info.size = len(metadata)
-        pkg_info.mtime = 0
-        pkg_info.mode = 0o644
-        pkg_info.uid = pkg_info.gid = 0
-        pkg_info.uname = pkg_info.gname = ""
-        archive.addfile(pkg_info, io.BytesIO(metadata))
-
-        for path in tracked_source_files():
-            relative = path.relative_to(ROOT)
-            if not include_in_sdist(relative):
-                continue
-            data = path.read_bytes()
-            info = tarfile.TarInfo(str(prefix / PurePosixPath(relative.as_posix())))
-            info.size = len(data)
-            info.mtime = 0
-            info.mode = 0o755 if os.access(path, os.X_OK) else 0o644
-            info.uid = info.gid = 0
-            info.uname = info.gname = ""
-            archive.addfile(info, io.BytesIO(data))
-    with (
-        target.open("wb") as handle,
-        gzip.GzipFile(filename="", mode="wb", fileobj=handle, mtime=0, compresslevel=9) as zipped,
-    ):
-        zipped.write(raw.getvalue())
-    return target
+    return validate_distribution_set(output)
 
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def main() -> int:
-    wheel = build_wheel()
-    sdist = build_sdist()
-    checksum = DIST / "SHA256SUMS"
+def verify_checksum_manifest(path: Path) -> None:
+    output = output_directory(path)
+    files = require_exact_files(output, expected_release_file_names())
+    checksum = files[CHECKSUM_NAME]
+    lines = checksum.read_text(encoding="utf-8").splitlines()
+    expected_names = expected_public_asset_names()
+    if len(lines) != len(expected_names):
+        raise SystemExit("checksum manifest has an unexpected number of entries")
+
+    recorded: dict[str, str] = {}
+    for line in lines:
+        digest, separator, name = line.partition("  ")
+        if not separator or not re.fullmatch(r"[0-9a-f]{64}", digest) or not name:
+            raise SystemExit(f"invalid checksum manifest entry: {line!r}")
+        if name in recorded:
+            raise SystemExit(f"duplicate checksum manifest entry: {name}")
+        recorded[name] = digest
+    if set(recorded) != expected_names:
+        raise SystemExit("checksum manifest does not cover the expected public artifact set")
+    for name, digest in recorded.items():
+        if sha256(files[name]) != digest:
+            raise SystemExit(f"checksum mismatch: {name}")
+
+
+def write_checksum_manifest(path: Path = DIST) -> Path:
+    """Checksum public assets; SHA256SUMS deliberately does not checksum itself."""
+    output = output_directory(path)
+    files = require_exact_files(output, expected_public_asset_names())
+    checksum = output / CHECKSUM_NAME
+    assets = sorted(expected_public_asset_names())
     checksum.write_text(
-        f"{sha256(wheel)}  {wheel.name}\n{sha256(sdist)}  {sdist.name}\n",
+        "".join(f"{sha256(files[name])}  {name}\n" for name in assets),
         encoding="utf-8",
     )
-    print(wheel)
-    print(sdist)
-    print(checksum)
+    verify_checksum_manifest(output)
+    return checksum
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Build ProofDiff's canonical PEP 517 release artifacts")
+    parser.add_argument("--outdir", type=Path, default=Path("dist"))
+    parser.add_argument(
+        "--write-checksums",
+        action="store_true",
+        help="write and verify SHA256SUMS for an existing wheel, sdist, and SBOM",
+    )
+    args = parser.parse_args()
+    if args.write_checksums:
+        print(write_checksum_manifest(args.outdir))
+    else:
+        artifacts = build_distributions(args.outdir)
+        print(artifacts.wheel)
+        print(artifacts.sdist)
     return 0
 
 

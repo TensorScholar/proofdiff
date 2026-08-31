@@ -1,5 +1,5 @@
 include README.md LICENSE SECURITY.md CHANGELOG.md CITATION.cff
 recursive-include docs *.md *.svg
-recursive-include examples *.json *.jsonl *.yaml *.yml *.md
+recursive-include examples *.json *.jsonl *.yaml *.yml *.md *.py
 recursive-include schemas *.json
 recursive-include benchmarks *.py *.json *.md

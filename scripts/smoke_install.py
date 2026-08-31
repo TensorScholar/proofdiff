@@ -31,19 +31,26 @@ def run(command: list[str], *, cwd: Path | None = None, expected: int = 0) -> su
     return completed
 
 
-def main() -> int:
+def canonical_wheel() -> Path:
     if not WHEEL.is_file():
         run([sys.executable, str(ROOT / "scripts" / "build_dist.py")])
+    if not WHEEL.is_file():
+        raise SystemExit(f"canonical wheel is missing: {WHEEL}")
+    return WHEEL
+
+
+def smoke_base_install(wheel: Path) -> None:
     with tempfile.TemporaryDirectory(prefix="proofdiff-smoke-") as raw:
         temp = Path(raw).resolve(strict=True)
         venv = temp / "venv"
         run([sys.executable, "-m", "venv", str(venv)])
         python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
         proofdiff = venv / ("Scripts/proofdiff.exe" if os.name == "nt" else "bin/proofdiff")
-        run([str(python), "-m", "pip", "install", "--no-deps", str(WHEEL)])
+        run([str(python), "-m", "pip", "install", "--no-deps", str(wheel)])
         version = run([str(proofdiff), "--version"])
         if version.stdout.strip() != f"proofdiff {VERSION}":
             raise SystemExit(f"unexpected version output: {version.stdout!r}")
+        run([str(python), "-c", "import proofdiff"])
         example = ROOT / "examples" / "support-agent"
         evidence = temp / "evidence"
         run(
@@ -66,6 +73,26 @@ def main() -> int:
             expected=2,
         )
         run([str(proofdiff), "verify", "--evidence", str(evidence)])
+
+
+def smoke_yaml_extra_install(wheel: Path) -> None:
+    with tempfile.TemporaryDirectory(prefix="proofdiff-yaml-smoke-") as raw:
+        temp = Path(raw).resolve(strict=True)
+        venv = temp / "venv"
+        run([sys.executable, "-m", "venv", str(venv)])
+        python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+        requirement = f"proofdiff[yaml] @ {wheel.resolve().as_uri()}"
+        run([str(python), "-m", "pip", "install", requirement])
+        run([str(python), "-c", "import proofdiff; import yaml"])
+
+
+def smoke_install(wheel: Path) -> None:
+    smoke_base_install(wheel)
+    smoke_yaml_extra_install(wheel)
+
+
+def main() -> int:
+    smoke_install(canonical_wheel())
     print("Clean-wheel smoke test passed")
     return 0
 

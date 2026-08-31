@@ -29,11 +29,10 @@ jobs:
       - run: python scripts/check_schemas.py
       - run: python scripts/check_architecture.py
       - run: python scripts/security_scan.py
-      - run: python -m build
-      - run: twine check dist/*
-      # The PEP 517 build above is a packaging validation check. The canonical
-      # publish set is produced by check_release.py, build_dist.py, and
-      # generate_sbom.py, then transferred to the publish job as one artifact.
+      - name: Set canonical build timestamp
+        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+      # check_release.py invokes the sole PEP 517 build, then validates,
+      # checksums, smoke-tests, attests, and transfers that exact artifact set.
       - name: Run canonical release checks and build
         env:
           RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
@@ -43,7 +42,6 @@ jobs:
           else
             python scripts/check_release.py
           fi
-      - run: python scripts/smoke_install.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: proofdiff-dist
