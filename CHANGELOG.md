@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0rc2 — Unreleased
+## 0.1.0rc2 — 2026-08-31
 
 - Rejects duplicate JSON/YAML keys, non-finite values, malformed identifiers, ambiguous booleans,
   duplicate records, unsafe symlinks, and bounded-input violations.
@@ -18,6 +18,8 @@
 - Makes the composite GitHub Action install the checked-out source rather than an unpublished PyPI
   package.
 - Adds a policy schema, stricter public schemas, adversarial tests, and more explicit release gates.
+- Adds the AgentGuard MCP exit-race retrospective validation pilot with pre-registered ground truth
+  and deterministic conformance checks.
 
 ## 0.1.0rc1 — Unreleased
 
