@@ -31,8 +31,18 @@ jobs:
       - run: python scripts/security_scan.py
       - run: python -m build
       - run: twine check dist/*
-      - run: python scripts/check_release.py
-      - run: python scripts/generate_sbom.py
+      # The PEP 517 build above is a packaging validation check. The canonical
+      # publish set is produced by check_release.py, build_dist.py, and
+      # generate_sbom.py, then transferred to the publish job as one artifact.
+      - name: Run canonical release checks and build
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          if [ -n "$RELEASE_TAG" ]; then
+            python scripts/check_release.py --tag "$RELEASE_TAG"
+          else
+            python scripts/check_release.py
+          fi
       - run: python scripts/smoke_install.py
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -41,3 +51,86 @@ jobs:
       - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-path: dist/*
+
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Download validated release set
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh run download "$GITHUB_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name proofdiff-dist \
+            --dir dist
+      - name: Verify validated release set
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          assets=(
+            "dist/proofdiff-${version}-py3-none-any.whl"
+            "dist/proofdiff-${version}.tar.gz"
+            "dist/SHA256SUMS"
+            "dist/proofdiff-sbom.cdx.json"
+          )
+          expected="$(printf '%s\n' "${assets[@]#dist/}" | sort)"
+          actual="$(find dist -maxdepth 1 -type f -print | sed 's#^dist/##' | sort)"
+          test "$actual" = "$expected"
+          (cd dist && sha256sum -c SHA256SUMS)
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          assets=(
+            "dist/proofdiff-${version}-py3-none-any.whl"
+            "dist/proofdiff-${version}.tar.gz"
+            "dist/SHA256SUMS"
+            "dist/proofdiff-sbom.cdx.json"
+          )
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            release_options=(
+              --repo "$GITHUB_REPOSITORY"
+              --verify-tag
+              --title "ProofDiff ${RELEASE_TAG}"
+              --generate-notes
+            )
+            if [[ "$RELEASE_TAG" =~ rc[0-9]+$ ]]; then
+              release_options+=(--prerelease)
+            fi
+            gh release create "$RELEASE_TAG" "${release_options[@]}" "${assets[@]}"
+          fi
+      - name: Verify GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          version="${RELEASE_TAG#v}"
+          expected=(
+            "proofdiff-${version}-py3-none-any.whl"
+            "proofdiff-${version}.tar.gz"
+            "SHA256SUMS"
+            "proofdiff-sbom.cdx.json"
+          )
+          expected_names="$(printf '%s\n' "${expected[@]}" | sort)"
+          actual_names="$(gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            --jq '.assets[].name' | sort)"
+          test "$actual_names" = "$expected_names"
