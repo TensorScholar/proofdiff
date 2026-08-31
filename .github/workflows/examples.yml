@@ -44,3 +44,42 @@ jobs:
             --evidence .proofdiff/evidence/review
           code=$?
           test "$code" -eq 1
+      - name: Prepare AgentGuard historical pilot
+        run: |
+          python examples/agentguard-mcp-exit-race/prepare.py \
+            --output .proofdiff/pilots/agentguard-mcp-exit-race
+      - name: Assert AgentGuard historical repair passes
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline .proofdiff/pilots/agentguard-mcp-exit-race/buggy-manifest.json \
+            --candidate .proofdiff/pilots/agentguard-mcp-exit-race/fixed-manifest.json \
+            --contracts examples/agentguard-mcp-exit-race/contracts \
+            --baseline-traces .proofdiff/pilots/agentguard-mcp-exit-race/buggy-traces.jsonl \
+            --candidate-traces .proofdiff/pilots/agentguard-mcp-exit-race/fixed-traces.jsonl \
+            --policy examples/agentguard-mcp-exit-race/policy.json \
+            --evidence .proofdiff/evidence/agentguard-repair
+          code=$?
+          test "$code" -eq 0
+          proofdiff verify --evidence .proofdiff/evidence/agentguard-repair
+      - name: Assert AgentGuard reverse regression requests review
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline .proofdiff/pilots/agentguard-mcp-exit-race/fixed-manifest.json \
+            --candidate .proofdiff/pilots/agentguard-mcp-exit-race/buggy-manifest.json \
+            --contracts examples/agentguard-mcp-exit-race/contracts \
+            --baseline-traces .proofdiff/pilots/agentguard-mcp-exit-race/fixed-traces.jsonl \
+            --candidate-traces .proofdiff/pilots/agentguard-mcp-exit-race/buggy-traces.jsonl \
+            --policy examples/agentguard-mcp-exit-race/policy.json \
+            --evidence .proofdiff/evidence/agentguard-regression
+          code=$?
+          test "$code" -eq 1
+          proofdiff verify --evidence .proofdiff/evidence/agentguard-regression
+      - name: Verify registered AgentGuard pilot metrics
+        run: |
+          python examples/agentguard-mcp-exit-race/verify.py \
+            --repair-evidence .proofdiff/evidence/agentguard-repair \
+            --regression-evidence .proofdiff/evidence/agentguard-regression
