@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "pilot_id": "AG-MCP-EXIT-001",
+  "status": "passed_registered_retrospective_gate",
+  "experiment_execution_head": "d1e3035a307bb0ce1926b68d9f4a687628a77c05",
+  "observed": {
+    "change_type": "SOURCE_CODE_CHANGED",
+    "changed_manifest_path": "source",
+    "selected_contracts": 1,
+    "total_contracts": 10,
+    "relevant_selected": 1,
+    "relevant_contract_recall": 1.0,
+    "relevant_contract_precision": 1.0,
+    "selection_reduction_ratio": 0.9,
+    "fallback_applied": false,
+    "chronological_repair": {
+      "candidate_contract_status": "pass",
+      "comparison": "fixed",
+      "decision": "PASS",
+      "exit_code": 0,
+      "evidence_verification": "pass"
+    },
+    "counterfactual_regression": {
+      "candidate_contract_status": "fail",
+      "comparison": "new_regression",
+      "decision": "REVIEW",
+      "exit_code": 1,
+      "evidence_verification": "pass"
+    },
+    "false_block_count": 0
+  },
+  "github_actions": {
+    "conformance_examples_run_id": 33410266525,
+    "conformance_examples_conclusion": "success",
+    "ci_run_id": 33410266462,
+    "ci_conclusion": "success",
+    "codeql_run_id": 33410266580,
+    "codeql_conclusion": "success"
+  },
+  "interpretation": {
+    "claim_supported": "ProofDiff's current deterministic core selected and classified the pre-registered behavior correctly for this real historical cross-repository change under the curated pilot model.",
+    "claims_not_supported": [
+      "production recall",
+      "independent external customer validation",
+      "live Windows runtime behavior",
+      "general onboarding economics",
+      "product-market fit"
+    ]
+  }
+}

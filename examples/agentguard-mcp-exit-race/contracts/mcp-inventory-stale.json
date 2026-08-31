@@ -1,0 +1,9 @@
+{
+  "id": "mcp.inventory_stale_requires_approval",
+  "title": "Stale MCP inventory requires approval",
+  "risk": "medium",
+  "tags": ["mcp", "inventory"],
+  "always_run": false,
+  "covers": {"change_types": ["POLICY_CHANGED"]},
+  "expect": {"output_contains": ["approval required"]}
+}

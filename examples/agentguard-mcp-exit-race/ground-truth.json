@@ -1,0 +1,54 @@
+{
+  "schema_version": "1",
+  "pilot_id": "AG-MCP-EXIT-001",
+  "registered_before_execution": true,
+  "relevant_contracts": [
+    "mcp.natural_exit_after_output_eof"
+  ],
+  "unrelated_contracts": [
+    "mcp.invalid_json_rejected",
+    "mcp.duplicate_request_id_rejected",
+    "mcp.inventory_stale_requires_approval",
+    "mcp.inventory_refreshes_on_notification",
+    "mcp.secret_output_redacted",
+    "policy.denied_tool_call_blocked",
+    "policy.approval_required_enforced",
+    "audit.decision_recorded",
+    "mcp.unknown_inventory_requires_approval"
+  ],
+  "expected_selection": {
+    "selected_contracts": 1,
+    "total_contracts": 10,
+    "relevant_selected": 1,
+    "relevant_contract_recall": 1.0,
+    "relevant_contract_precision": 1.0,
+    "selection_reduction_ratio": 0.9,
+    "fallback_applied": false
+  },
+  "expected_runs": {
+    "chronological_repair": {
+      "baseline": "buggy",
+      "candidate": "fixed",
+      "candidate_contract_status": "pass",
+      "comparison": "fixed",
+      "decision": "PASS",
+      "exit_code": 0
+    },
+    "counterfactual_regression": {
+      "baseline": "fixed",
+      "candidate": "buggy",
+      "candidate_contract_status": "fail",
+      "comparison": "new_regression",
+      "decision": "REVIEW",
+      "exit_code": 1
+    }
+  },
+  "failure_criteria": [
+    "the relevant contract is not selected",
+    "an unrelated contract is selected without fallback justification",
+    "fallback is applied despite direct coverage",
+    "the chronological repair does not pass",
+    "the reverse regression is not surfaced for review",
+    "the reverse regression is falsely classified as BLOCK under the registered high-risk contract"
+  ]
+}

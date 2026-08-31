@@ -1,0 +1,9 @@
+{
+  "id": "mcp.inventory_refreshes_on_notification",
+  "title": "MCP inventory refreshes after change notification",
+  "risk": "low",
+  "tags": ["mcp", "inventory"],
+  "always_run": false,
+  "covers": {"change_types": ["TOOL_ADDED"]},
+  "expect": {"output_contains": ["inventory refreshed"]}
+}

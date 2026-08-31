@@ -1,0 +1,9 @@
+{
+  "id": "mcp.invalid_json_rejected",
+  "title": "Invalid MCP JSON is rejected",
+  "risk": "medium",
+  "tags": ["mcp"],
+  "always_run": false,
+  "covers": {"change_types": ["MCP_SERVER_CHANGED"]},
+  "expect": {"output_contains": ["invalid json rejected"]}
+}

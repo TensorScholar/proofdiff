@@ -1,0 +1,9 @@
+{
+  "id": "audit.decision_recorded",
+  "title": "Authorization decisions are recorded in the audit ledger",
+  "risk": "low",
+  "tags": ["audit"],
+  "always_run": false,
+  "covers": {"change_types": ["TOOL_DESCRIPTION_CHANGED"]},
+  "expect": {"output_contains": ["decision recorded"]}
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": "1",
+  "pilot_id": "AG-MCP-EXIT-001",
+  "proofdiff": {
+    "repository": "TensorScholar/proofdiff",
+    "frozen_sha": "5e2e3f748da51b466dcdf611d30374ecd2f4b66b"
+  },
+  "target": {
+    "repository": "TensorScholar/agentguard",
+    "pull_request": 8,
+    "pull_request_title": "fix: allow natural MCP server exit after output drain",
+    "buggy_sha": "0b6e72995fc981e8760c3eefe057eef9dc8d7429",
+    "fixed_sha": "abe3c6d320ac4351bcd8a133ea546aa8a052ecf8",
+    "merge_sha": "abcd464c93ec4b859a01ff06fba250ad9ea026d8",
+    "changed_source_paths": [
+      "src/agentguard/mcp_stdio.py",
+      "tests/test_mcp_stdio.py"
+    ]
+  },
+  "historical_observation": {
+    "failure_mode": "stdout reached EOF before the child process exit status became visible; the proxy treated the transient state as forced shutdown and returned exit code 1",
+    "buggy": {
+      "stdout_drained": true,
+      "natural_child_exit": false,
+      "forced_shutdown": true,
+      "proxy_exit_code": 1
+    },
+    "fixed": {
+      "stdout_drained": true,
+      "natural_child_exit": true,
+      "forced_shutdown": false,
+      "proxy_exit_code": 0
+    },
+    "evidence_basis": [
+      "merged AgentGuard PR #8 description",
+      "PR #8 source diff in src/agentguard/mcp_stdio.py",
+      "PR #8 deterministic regression test test_wait_or_stop_server_allows_natural_exit_after_output_eof"
+    ]
+  },
+  "limitations": {
+    "live_runtime_capture": false,
+    "independent_external_customer": false,
+    "trace_kind": "deterministic reconstruction from historical source/test evidence",
+    "contract_universe": "pilot-curated"
+  }
+}
