@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0rc3 — 2026-09-01
+
+- Canonicalizes release artifacts on the PEP 517 backend as the sole wheel/sdist producer.
+- Makes the release pipeline build, validate, and publish the same artifact set (wheel, sdist, SBOM, SHA256SUMS) with provenance attestation.
+- Validates the `yaml` extra in wheel metadata and verifies both base and `proofdiff[yaml]` clean installs.
+- Ensures the sdist includes runnable AgentGuard pilot helpers (`prepare.py`, `verify.py`) and tightens checksum coverage to wheel, sdist, and SBOM.
+- Aligns CI/release workflows on `SOURCE_DATE_EPOCH` and removes duplicate build paths.
+
 ## 0.1.0rc2 — 2026-08-31
 
 - Rejects duplicate JSON/YAML keys, non-finite values, malformed identifiers, ambiguous booleans,
