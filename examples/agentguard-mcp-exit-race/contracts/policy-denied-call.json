@@ -1,0 +1,9 @@
+{
+  "id": "policy.denied_tool_call_blocked",
+  "title": "Denied tool calls do not reach the MCP server",
+  "risk": "medium",
+  "tags": ["policy"],
+  "always_run": false,
+  "covers": {"change_types": ["POLICY_SCOPE_EXPANDED"]},
+  "expect": {"output_contains": ["tool call denied"]}
+}

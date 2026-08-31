@@ -1,0 +1,19 @@
+{
+  "id": "mcp.natural_exit_after_output_eof",
+  "title": "MCP child may exit naturally after stdout EOF",
+  "risk": "high",
+  "tags": ["retrospective", "mcp", "availability"],
+  "always_run": false,
+  "covers": {
+    "change_types": ["SOURCE_CODE_CHANGED"],
+    "manifest_paths": ["source"]
+  },
+  "expect": {
+    "required_sequence": ["process:stdout_eof", "process:child_exit"],
+    "output_contains": ["output drained"],
+    "budgets": {
+      "exit_code": 0,
+      "forced_shutdown": 0
+    }
+  }
+}

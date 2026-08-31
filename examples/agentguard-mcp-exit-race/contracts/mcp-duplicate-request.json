@@ -1,0 +1,9 @@
+{
+  "id": "mcp.duplicate_request_id_rejected",
+  "title": "Duplicate MCP request identifiers are rejected",
+  "risk": "medium",
+  "tags": ["mcp"],
+  "always_run": false,
+  "covers": {"change_types": ["RUNTIME_CONFIG_CHANGED"]},
+  "expect": {"output_contains": ["duplicate request rejected"]}
+}

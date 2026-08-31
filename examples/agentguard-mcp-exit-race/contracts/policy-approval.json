@@ -1,0 +1,9 @@
+{
+  "id": "policy.approval_required_enforced",
+  "title": "Approval-required decisions are enforced",
+  "risk": "medium",
+  "tags": ["policy"],
+  "always_run": false,
+  "covers": {"change_types": ["TOOL_SAFETY_METADATA_CHANGED"]},
+  "expect": {"output_contains": ["approval enforced"]}
+}
