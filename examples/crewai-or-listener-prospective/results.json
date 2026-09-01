@@ -1,0 +1,49 @@
+{
+  "capture": {
+    "base": {
+      "incomplete_runs": 5,
+      "join_violation_runs": 0,
+      "runs": 5,
+      "runtime_error_runs": 0
+    },
+    "candidate": {
+      "incomplete_runs": 0,
+      "join_violation_runs": 0,
+      "runs": 5,
+      "runtime_error_runs": 0
+    }
+  },
+  "claim_scope": "independent deterministic probe of the frozen CrewAI OR-listener behavior; not customer validation or general production recall",
+  "pilot_id": "CREWAI-OR-PROSPECTIVE-001",
+  "preregistration_merge_sha": "e8d29240566e5740b562a7f059a03fc891c23c2c",
+  "proofdiff": {
+    "counterfactual_regression": {
+      "candidate_contract_status": "fail",
+      "comparison": "new_regression",
+      "decision": "REVIEW"
+    },
+    "prospective_repair": {
+      "candidate_contract_status": "pass",
+      "comparison": "fixed",
+      "decision": "PASS"
+    },
+    "selection": {
+      "fallback_applied": false,
+      "reduction_ratio": 0.875,
+      "selected_contracts": 1,
+      "selected_ids": [
+        "flow.parallel_or_producers_complete"
+      ],
+      "total_contracts": 8
+    }
+  },
+  "schema_version": "1",
+  "status": "passed_registered_prospective_gate",
+  "target": {
+    "base_sha": "ec53d6f53448fcc7842f4d4d5f3272d2e7782557",
+    "candidate_sha": "18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed",
+    "issue": 7183,
+    "pull_request": 7184,
+    "repository": "crewAIInc/crewAI"
+  }
+}

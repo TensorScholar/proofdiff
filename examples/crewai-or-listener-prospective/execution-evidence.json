@@ -1,0 +1,39 @@
+{
+  "schema_version": "1",
+  "pilot_id": "CREWAI-OR-PROSPECTIVE-001",
+  "preregistration_merge_sha": "e8d29240566e5740b562a7f059a03fc891c23c2c",
+  "authoritative_capture": {
+    "proofdiff_head_sha": "c87ac5b94684af2115b827ab299b18e7442d7be7",
+    "workflow_run_id": 33539519276,
+    "workflow_run_number": 6,
+    "workflow_conclusion": "success",
+    "artifact": {
+      "id": 9813096656,
+      "name": "crewai-or-listener-prospective-33539519276",
+      "digest": "sha256:002713675d9e19040636f984d7035986a253fc6680e2af077f8dd678f1589704",
+      "created_at": "2026-09-01T17:46:47Z",
+      "expires_at": "2026-09-15T17:46:47Z"
+    }
+  },
+  "preserved_files": {
+    "results.json": "sha256:09cf9e727c426c824d1d636f755f36544f5f9c29d3463db75e6208956e3d5d23",
+    "captures/base.json": "sha256:376d1f6fd1ed29ddf1c1e81691bc375ebdc96be0388ebb43367e7c509e4eb4ce",
+    "captures/candidate.json": "sha256:b0d23494e687f7bcbd6fe35e05e6c0ae40b2f2dfe30a09f0d78ff1116b1f1fa5"
+  },
+  "target_resolution_observation_after_capture": {
+    "repository": "crewAIInc/crewAI",
+    "pull_request": 7184,
+    "state": "open",
+    "merged": false,
+    "head_sha": "18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed"
+  },
+  "evidence_boundary": {
+    "target_authored_tests_count_as_outcome_evidence": false,
+    "automated_target_pr_reviews_count_as_outcome_evidence": false,
+    "proofdiff_owned_probe": true,
+    "external_model_calls": false,
+    "external_tool_calls": false,
+    "probe_network_required": false,
+    "dependency_installation_network_required": true
+  }
+}

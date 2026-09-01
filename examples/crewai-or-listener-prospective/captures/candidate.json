@@ -1,0 +1,57 @@
+{
+  "revision": "18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed",
+  "runs": [
+    {
+      "completed": [
+        "fast",
+        "slow"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast",
+        "slow"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast",
+        "slow"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast",
+        "slow"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast",
+        "slow"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    }
+  ],
+  "schema_version": "1",
+  "summary": {
+    "incomplete_runs": 0,
+    "join_violation_runs": 0,
+    "runs": 5,
+    "runtime_error_runs": 0
+  }
+}

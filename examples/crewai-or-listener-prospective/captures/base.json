@@ -1,0 +1,52 @@
+{
+  "revision": "ec53d6f53448fcc7842f4d4d5f3272d2e7782557",
+  "runs": [
+    {
+      "completed": [
+        "fast"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    },
+    {
+      "completed": [
+        "fast"
+      ],
+      "joined": 1,
+      "process_exit_code": 0,
+      "runtime_error": null
+    }
+  ],
+  "schema_version": "1",
+  "summary": {
+    "incomplete_runs": 5,
+    "join_violation_runs": 0,
+    "runs": 5,
+    "runtime_error_runs": 0
+  }
+}
