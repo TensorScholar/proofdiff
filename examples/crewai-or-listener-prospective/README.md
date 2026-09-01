@@ -50,13 +50,33 @@ The live-capture phase uses only ProofDiff-owned probe/translation code:
 
 Dependency installation uses network access. The registered probe behavior itself requires no network, model call, API key, or external tool call.
 
+## Measured result
+
+The authoritative capture run completed successfully against the exact preregistered revisions.
+
+Observed frozen baseline:
+
+- 5/5 runs reproduced incomplete producer completion;
+- the OR join fired exactly once in every run;
+- no runtime errors occurred.
+
+Observed frozen candidate:
+
+- 5/5 runs completed both `fast` and `slow` producer branches;
+- the OR join fired exactly once in every run;
+- no runtime errors occurred.
+
+ProofDiff selected exactly `flow.parallel_or_producers_complete` from the eight-contract universe, for an 87.5% selection reduction with no fallback. The prospective repair produced `PASS` with comparison `fixed`; the reverse direction produced `REVIEW` with comparison `new_regression`.
+
+`results.json` records the compact measured outcome. `captures/` preserves the raw five-run observations, and `execution-evidence.json` records the authoritative GitHub Actions run and artifact lineage.
+
 ## Pilot phases
 
 1. **Registration — complete**: target SHAs, behavior claim, contract universe, expected selection, expected ProofDiff decisions, and failure criteria are frozen on ProofDiff `main`.
-2. **Independent capture — in progress**: execute the same fixed reproduction against the frozen base and candidate revisions on an isolated runner.
-3. **ProofDiff analysis**: translate captured observations deterministically into manifests/traces and run the registered contract set in both chronological and reverse directions.
-4. **External resolution**: record the later maintainer disposition of CrewAI PR #7184 separately from the registered prediction.
-5. **Finalization**: publish measured pilot results and explicit limitations without rewriting the preregistration.
+2. **Independent capture — complete**: the fixed reproduction ran against the exact frozen base and candidate revisions in isolated environments.
+3. **ProofDiff analysis — complete**: captured observations were translated deterministically and evaluated in both chronological and reverse directions.
+4. **External resolution — pending**: CrewAI PR #7184 remained open and unmerged when the successful capture was finalized; its later maintainer disposition is recorded separately and cannot alter the preregistered result.
+5. **Finalization — complete**: measured captures, compact results, and execution lineage are preserved without rewriting the preregistration.
 
 ## Registered contract universe
 
@@ -68,6 +88,6 @@ The other seven contracts are deliberate unrelated controls. Registered expected
 
 ## Non-claims
 
-Even a successful pilot does not establish production recall, general semantic recall, customer validation, product-market fit, or safety of CrewAI. It validates only the frozen behavior and ProofDiff decision path defined in `registration.json`.
+This successful pilot does not establish production recall, general semantic recall, customer validation, product-market fit, or safety of CrewAI. It validates only the frozen behavior and ProofDiff decision path defined in `registration.json`.
 
-Measured results are added only from the independent live-capture artifact; the preregistration files are not rewritten after observation.
+Measured results come from the independent live-capture artifact; the preregistration files were not rewritten after observation.
