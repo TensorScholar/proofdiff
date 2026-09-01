@@ -1,0 +1,153 @@
+name: CrewAI prospective pilot
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/crewai-prospective-pilot.yml"
+      - "examples/crewai-or-listener-prospective/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crewai-prospective-pilot-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  live-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      BASE_SHA: ec53d6f53448fcc7842f4d4d5f3272d2e7782557
+      CANDIDATE_SHA: 18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed
+      PREREGISTRATION_SHA: e8d29240566e5740b562a7f059a03fc891c23c2c
+      PILOT_OUT: .proofdiff/pilots/crewai-or-listener-prospective
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    steps:
+      - name: Checkout ProofDiff
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install ProofDiff validation environment
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[dev,yaml]'
+
+      - name: Checkout frozen CrewAI base
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: crewAIInc/crewAI
+          ref: ${{ env.BASE_SHA }}
+          path: .pilot/crewai-base
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Checkout frozen CrewAI candidate
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ShyamRV/crewAI
+          ref: ${{ env.CANDIDATE_SHA }}
+          path: .pilot/crewai-candidate
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Verify frozen target revisions
+        shell: bash
+        run: |
+          test "$(git -C .pilot/crewai-base rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git -C .pilot/crewai-candidate rev-parse HEAD)" = "$CANDIDATE_SHA"
+
+      - name: Install frozen CrewAI revisions in isolated environments
+        shell: bash
+        run: |
+          python -m venv .pilot/base-venv
+          python -m venv .pilot/candidate-venv
+          .pilot/base-venv/bin/python -m pip install --upgrade pip
+          .pilot/candidate-venv/bin/python -m pip install --upgrade pip
+          .pilot/base-venv/bin/python -m pip install ./.pilot/crewai-base/lib/crewai
+          .pilot/candidate-venv/bin/python -m pip install ./.pilot/crewai-candidate/lib/crewai
+
+      - name: Capture independent five-run behavior probes
+        shell: bash
+        run: |
+          mkdir -p "$PILOT_OUT/raw"
+          python examples/crewai-or-listener-prospective/capture.py \
+            --python .pilot/base-venv/bin/python \
+            --probe examples/crewai-or-listener-prospective/probe.py \
+            --revision "$BASE_SHA" \
+            --runs 5 \
+            --output "$PILOT_OUT/raw/base-capture.json"
+          python examples/crewai-or-listener-prospective/capture.py \
+            --python .pilot/candidate-venv/bin/python \
+            --probe examples/crewai-or-listener-prospective/probe.py \
+            --revision "$CANDIDATE_SHA" \
+            --runs 5 \
+            --output "$PILOT_OUT/raw/candidate-capture.json"
+
+      - name: Translate captures into frozen ProofDiff inputs
+        run: |
+          python examples/crewai-or-listener-prospective/prepare.py \
+            --base-capture "$PILOT_OUT/raw/base-capture.json" \
+            --candidate-capture "$PILOT_OUT/raw/candidate-capture.json" \
+            --output "$PILOT_OUT/input"
+
+      - name: Run preregistered prospective repair
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline "$PILOT_OUT/input/base-manifest.json" \
+            --candidate "$PILOT_OUT/input/candidate-manifest.json" \
+            --contracts examples/crewai-or-listener-prospective/contracts \
+            --baseline-traces "$PILOT_OUT/input/base-traces.jsonl" \
+            --candidate-traces "$PILOT_OUT/input/candidate-traces.jsonl" \
+            --policy examples/crewai-or-listener-prospective/policy.json \
+            --evidence "$PILOT_OUT/evidence/repair"
+          code=$?
+          set -e
+          test "$code" -eq 0
+          proofdiff verify --evidence "$PILOT_OUT/evidence/repair"
+
+      - name: Run preregistered reverse regression
+        shell: bash
+        run: |
+          set +e
+          proofdiff check \
+            --baseline "$PILOT_OUT/input/candidate-manifest.json" \
+            --candidate "$PILOT_OUT/input/base-manifest.json" \
+            --contracts examples/crewai-or-listener-prospective/contracts \
+            --baseline-traces "$PILOT_OUT/input/candidate-traces.jsonl" \
+            --candidate-traces "$PILOT_OUT/input/base-traces.jsonl" \
+            --policy examples/crewai-or-listener-prospective/policy.json \
+            --evidence "$PILOT_OUT/evidence/regression"
+          code=$?
+          set -e
+          test "$code" -eq 1
+          proofdiff verify --evidence "$PILOT_OUT/evidence/regression"
+
+      - name: Verify preregistered pilot gate and write results
+        run: |
+          python examples/crewai-or-listener-prospective/verify.py \
+            --base-capture "$PILOT_OUT/raw/base-capture.json" \
+            --candidate-capture "$PILOT_OUT/raw/candidate-capture.json" \
+            --repair-evidence "$PILOT_OUT/evidence/repair" \
+            --regression-evidence "$PILOT_OUT/evidence/regression" \
+            --preregistration-sha "$PREREGISTRATION_SHA" \
+            --results-out "$PILOT_OUT/results.json"
+
+      - name: Upload pilot evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: crewai-or-listener-prospective-${{ github.run_id }}
+          path: .proofdiff/pilots/crewai-or-listener-prospective/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

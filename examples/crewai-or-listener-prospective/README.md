@@ -10,7 +10,8 @@ Target:
 - frozen base: `ec53d6f53448fcc7842f4d4d5f3272d2e7782557`;
 - frozen candidate: `18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed`.
 
-At registration time, pull request #7184 was open and unmerged. The registration commit must land in ProofDiff before any live probe results are added to this directory. That commit establishes the hypotheses, contract universe, acceptance criteria, and frozen target revisions before external maintainer resolution.
+The preregistration was merged to protected ProofDiff `main` at
+`e8d29240566e5740b562a7f059a03fc891c23c2c`. CrewAI pull request #7184 was rechecked immediately after that merge and was still open and unmerged. The frozen registration therefore precedes the external maintainer resolution.
 
 ## Registered behavior claim
 
@@ -30,19 +31,32 @@ The frozen baseline must reproduce the reported incomplete-producer behavior in 
 This target is materially stronger validation than the historical AgentGuard retrospective:
 
 - CrewAI is an external public repository with no ProofDiff-author affiliation recorded in this pilot;
-- the target PR was still open when the hypothesis was registered;
+- the target PR was still open when the hypothesis was registered and when the registration reached ProofDiff `main`;
 - the behavior is deterministic and can be reproduced without an LLM, API key, external tool, or live model provider;
 - the bug can skip branch state updates, tool calls, or other side effects, making it a meaningful release-assurance behavior rather than a cosmetic change.
 
 Candidate-authored test claims and automated review summaries are context only. They are not counted as independent pilot outcome evidence.
 
+## Independent execution harness
+
+The live-capture phase uses only ProofDiff-owned probe/translation code:
+
+- `probe.py` implements the fixed public reproduction;
+- `capture.py` executes it five times in a fresh process against each frozen CrewAI revision;
+- `prepare.py` translates the raw captures into source-only ProofDiff manifests and deterministic traces;
+- `verify.py` enforces the preregistered capture, selection, comparison, and decision criteria.
+
+`.github/workflows/crewai-prospective-pilot.yml` checks out the exact external SHAs with read-only credentials, installs each revision into an isolated Python 3.12 environment, disables telemetry for the probe, and uploads the raw captures and ProofDiff evidence as a GitHub Actions artifact. It does not run target-provided tests as pilot outcome evidence.
+
+Dependency installation uses network access. The registered probe behavior itself requires no network, model call, API key, or external tool call.
+
 ## Pilot phases
 
-1. **Registration** — freeze target SHAs, behavior claim, contract universe, expected selection, expected ProofDiff decisions, and failure criteria.
-2. **Independent capture** — execute the same fixed reproduction against the frozen base and candidate revisions on an isolated runner.
-3. **ProofDiff analysis** — translate captured observations deterministically into manifests/traces and run the registered contract set in both chronological and reverse directions.
-4. **External resolution** — record the later maintainer disposition of CrewAI PR #7184 separately from the registered prediction.
-5. **Finalization** — publish measured pilot results and explicit limitations without rewriting the preregistration.
+1. **Registration — complete**: target SHAs, behavior claim, contract universe, expected selection, expected ProofDiff decisions, and failure criteria are frozen on ProofDiff `main`.
+2. **Independent capture — in progress**: execute the same fixed reproduction against the frozen base and candidate revisions on an isolated runner.
+3. **ProofDiff analysis**: translate captured observations deterministically into manifests/traces and run the registered contract set in both chronological and reverse directions.
+4. **External resolution**: record the later maintainer disposition of CrewAI PR #7184 separately from the registered prediction.
+5. **Finalization**: publish measured pilot results and explicit limitations without rewriting the preregistration.
 
 ## Registered contract universe
 
@@ -56,4 +70,4 @@ The other seven contracts are deliberate unrelated controls. Registered expected
 
 Even a successful pilot does not establish production recall, general semantic recall, customer validation, product-market fit, or safety of CrewAI. It validates only the frozen behavior and ProofDiff decision path defined in `registration.json`.
 
-No result file belongs in this directory until the registration has been merged to ProofDiff `main`.
+Measured results are added only from the independent live-capture artifact; the preregistration files are not rewritten after observation.

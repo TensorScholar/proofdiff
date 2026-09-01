@@ -33,20 +33,22 @@ product-market fit.
 
 ## crewai-or-listener-prospective
 
-A prospective cross-repository pilot registered while `crewAIInc/crewAI`
+A prospective cross-repository pilot preregistered while `crewAIInc/crewAI`
 pull request #7184 was still open and unmerged.
 
 It freezes:
 
 - target base and candidate revisions;
 - an external public issue reproduction;
-- the behavioral claim and probe protocol;
+- the behavioral claim and five-run probe protocol;
 - an eight-contract control universe;
 - expected selection and decision outcomes;
 - failure criteria before live capture and external maintainer resolution.
 
-No outcome should be added to this pilot until its registration is merged to
-ProofDiff `main`.
+The preregistration is now on protected ProofDiff `main`. A dedicated read-only
+GitHub Actions workflow performs independent capture against the exact frozen
+CrewAI revisions and preserves the resulting ProofDiff evidence as a workflow
+artifact.
 
 ## Running examples
 
@@ -57,5 +59,4 @@ python examples/agentguard-mcp-exit-race/prepare.py \
   --output .proofdiff/pilots/agentguard-mcp-exit-race
 ```
 
-The CrewAI prospective pilot is intentionally registration-only until its
-preregistration commit is merged. See each example directory README for details.
+See each example directory README for its evidence boundary and execution details.
