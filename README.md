@@ -201,13 +201,19 @@ branch-aware coverage enforcement; schema, architecture, and security checks; `p
 standard PEP 517 build and Twine validation; clean-wheel smoke installation; and conformance
 examples.
 
-A real external agent-release pilot has not yet been verified. Stable `v0.1.0` remains gated on
-real-world pilot evidence, resolution of pilot findings, reviewed compatibility decisions, and
-signed or attested release artifacts.
+One historical cross-repository AgentGuard retrospective pilot has been validated. It is evidence
+for a narrow deterministic retrospective claim, not independent prospective customer validation.
+The `v0.1.0rc3` tagged rehearsal also validated publication of the canonical wheel, sdist, SBOM, and
+checksum manifest with retrievable build provenance. Compatibility decisions for the `0.1.x` line
+are recorded in [`docs/architecture.md`](docs/architecture.md#compatibility-contract-for-v01x).
+
+Stable `v0.1.0` remains gated on independent prospective or external real-world pilot evidence,
+resolution of material pilot findings, and a final stable cut through the same protected,
+attested release path.
 
 ## Documentation
 
-- [`docs/architecture.md`](docs/architecture.md) — system boundaries and module structure
+- [`docs/architecture.md`](docs/architecture.md) — system boundaries, module structure, and compatibility contract
 - [`docs/evidence-model.md`](docs/evidence-model.md) — evidence contents and integrity semantics
 - [`docs/threat-model.md`](docs/threat-model.md) — security assumptions and trust boundaries
 - [`docs/limitations.md`](docs/limitations.md) — explicit non-claims and current constraints
