@@ -1,0 +1,13 @@
+{
+  "id": "flow.and_join_waits_for_all",
+  "title": "AND joins wait for all declared producers",
+  "risk": "medium",
+  "tags": ["prospective", "flow", "control"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["flow.and_join"]
+  },
+  "expect": {
+    "output_contains": ["AND join waited for all producers"]
+  }
+}

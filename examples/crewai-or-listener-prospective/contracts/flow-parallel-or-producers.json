@@ -1,0 +1,19 @@
+{
+  "id": "flow.parallel_or_producers_complete",
+  "title": "OR joins do not cancel independently triggered producers",
+  "risk": "high",
+  "tags": ["prospective", "flow", "concurrency", "side-effects"],
+  "always_run": false,
+  "covers": {
+    "change_types": ["SOURCE_CODE_CHANGED"],
+    "manifest_paths": ["source"]
+  },
+  "expect": {
+    "output_contains": ["all 5 probe runs preserved both producers and a single OR join"],
+    "budgets": {
+      "incomplete_runs": 0,
+      "join_violation_runs": 0,
+      "runtime_error_runs": 0
+    }
+  }
+}

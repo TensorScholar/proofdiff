@@ -1,0 +1,13 @@
+{
+  "id": "retrieval.context_nonempty",
+  "title": "Retrieval-backed runs retain usable context",
+  "risk": "medium",
+  "tags": ["prospective", "retrieval"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["retrieval"]
+  },
+  "expect": {
+    "output_contains": ["retrieval context available"]
+  }
+}

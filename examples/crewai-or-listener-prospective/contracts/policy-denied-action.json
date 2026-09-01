@@ -1,0 +1,13 @@
+{
+  "id": "policy.denied_action_blocked",
+  "title": "Denied actions remain blocked by policy",
+  "risk": "high",
+  "tags": ["prospective", "policy"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["policy"]
+  },
+  "expect": {
+    "output_contains": ["denied action blocked"]
+  }
+}
