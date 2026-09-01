@@ -67,11 +67,11 @@ def _load_json(text: str) -> Any:
 
 def _load_yaml(text: str) -> Any:
     try:
-        import yaml  # type: ignore[import-untyped]
+        import yaml  # type: ignore[import-untyped,unused-ignore]
     except ImportError as exc:
         raise InputError("YAML input requires the optional dependency: pip install 'proofdiff[yaml]'") from exc
 
-    class UniqueKeySafeLoader(yaml.SafeLoader):  # type: ignore[misc]
+    class UniqueKeySafeLoader(yaml.SafeLoader):  # type: ignore[misc,unused-ignore]
         pass
 
     def construct_mapping(loader: Any, node: Any, deep: bool = False) -> dict[str, Any]:

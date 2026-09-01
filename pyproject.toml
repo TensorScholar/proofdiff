@@ -79,6 +79,9 @@ src = ["src", "tests", "scripts", "benchmarks"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/proofdiff/domain/models.py" = ["UP042"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true
