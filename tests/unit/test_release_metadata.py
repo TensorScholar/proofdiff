@@ -117,8 +117,9 @@ def test_checksum_manifest_covers_every_public_asset(
 
 
 def test_invalid_tag_version_mismatch_fails() -> None:
+    mismatched_tag = "v0.0.0" if __version__ != "0.0.0" else "v999.0.0"
     with pytest.raises(SystemExit, match="tag/version mismatch"):
-        check_release.check_version_consistency("v0.1.0")
+        check_release.check_version_consistency(mismatched_tag)
 
 
 def test_current_tag_version_matches() -> None:
