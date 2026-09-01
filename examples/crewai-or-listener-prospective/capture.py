@@ -98,7 +98,9 @@ def main() -> int:
     if args.runs <= 0 or args.runs > 100:
         raise SystemExit("--runs must be between 1 and 100")
 
-    result = capture(args.python.resolve(), args.probe.resolve(), args.revision, args.runs)
+    # Preserve the virtual-environment interpreter path. resolve() follows the
+    # venv's python symlink to the host interpreter and drops the venv context.
+    result = capture(args.python.absolute(), args.probe.resolve(), args.revision, args.runs)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result["summary"], sort_keys=True))

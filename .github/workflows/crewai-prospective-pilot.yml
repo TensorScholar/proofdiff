@@ -40,6 +40,22 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e '.[dev,yaml]'
 
+      - name: Export Ruff-formatted harness snapshot
+        shell: bash
+        run: |
+          ruff format \
+            examples/crewai-or-listener-prospective/probe.py \
+            examples/crewai-or-listener-prospective/capture.py \
+            examples/crewai-or-listener-prospective/prepare.py \
+            examples/crewai-or-listener-prospective/verify.py
+          mkdir -p "$PILOT_OUT/formatted-source"
+          cp \
+            examples/crewai-or-listener-prospective/probe.py \
+            examples/crewai-or-listener-prospective/capture.py \
+            examples/crewai-or-listener-prospective/prepare.py \
+            examples/crewai-or-listener-prospective/verify.py \
+            "$PILOT_OUT/formatted-source/"
+
       - name: Checkout frozen CrewAI base
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
