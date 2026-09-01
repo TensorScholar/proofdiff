@@ -1,0 +1,13 @@
+{
+  "id": "flow.listener_error_isolation",
+  "title": "Listener failures preserve unrelated execution semantics",
+  "risk": "medium",
+  "tags": ["prospective", "flow", "errors"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["runtime.listener_errors"]
+  },
+  "expect": {
+    "output_contains": ["listener error isolation preserved"]
+  }
+}

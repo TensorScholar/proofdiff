@@ -1,0 +1,92 @@
+{
+  "schema_version": "1",
+  "pilot_id": "CREWAI-OR-PROSPECTIVE-001",
+  "registration_date": "2026-09-01",
+  "registered_before_external_resolution": true,
+  "target": {
+    "repository": "crewAIInc/crewAI",
+    "issue": 7183,
+    "pull_request": 7184,
+    "pull_request_title": "fix(flow): preserve parallel branches feeding OR listeners",
+    "state_at_registration": "open",
+    "merged_at_registration": false,
+    "base_sha": "ec53d6f53448fcc7842f4d4d5f3272d2e7782557",
+    "candidate_sha": "18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed"
+  },
+  "registered_claim": "An or_() listener may determine when a downstream join fires, but it must not cancel independently triggered producer listeners. Both producers should complete, while the downstream OR join fires exactly once.",
+  "probe_protocol": {
+    "runs_per_revision": 5,
+    "external_model_calls": false,
+    "external_tool_calls": false,
+    "network_required_during_probe": false,
+    "probe_inputs": "fixed deterministic asyncio fan-out reproduction derived from public issue #7183",
+    "baseline_bug_confirmation": {
+      "minimum_incomplete_runs": 4,
+      "maximum_join_violation_runs": 0
+    },
+    "candidate_acceptance": {
+      "maximum_incomplete_runs": 0,
+      "maximum_join_violation_runs": 0,
+      "maximum_runtime_error_runs": 0
+    }
+  },
+  "relevant_contracts": [
+    "flow.parallel_or_producers_complete"
+  ],
+  "unrelated_contracts": [
+    "flow.and_join_waits_for_all",
+    "flow.router_rearms_across_loop",
+    "flow.listener_error_isolation",
+    "agent.output_schema_preserved",
+    "tool.approval_required",
+    "policy.denied_action_blocked",
+    "retrieval.context_nonempty"
+  ],
+  "expected_selection": {
+    "selected_contracts": 1,
+    "total_contracts": 8,
+    "relevant_selected": 1,
+    "relevant_contract_recall": 1.0,
+    "relevant_contract_precision": 1.0,
+    "selection_reduction_ratio": 0.875,
+    "fallback_applied": false
+  },
+  "expected_proofdiff_runs": {
+    "prospective_repair": {
+      "baseline": "frozen_base",
+      "candidate": "frozen_candidate",
+      "candidate_contract_status": "pass",
+      "comparison": "fixed",
+      "decision": "PASS",
+      "exit_code": 0
+    },
+    "counterfactual_regression": {
+      "baseline": "frozen_candidate",
+      "candidate": "frozen_base",
+      "candidate_contract_status": "fail",
+      "comparison": "new_regression",
+      "decision": "REVIEW",
+      "exit_code": 1
+    }
+  },
+  "external_resolution_not_used_for_registration": [
+    "maintainer merge or close decision",
+    "future maintainer comments after the registration commit",
+    "future target-repository CI results after the registration commit"
+  ],
+  "context_not_counted_as_independent_outcome_evidence": [
+    "candidate author's claimed focused test results",
+    "automated review summaries on pull request #7184"
+  ],
+  "failure_criteria": [
+    "the frozen baseline does not reproduce the reported incomplete-producer behavior in at least four of five probe runs",
+    "the frozen candidate has any incomplete producer run",
+    "the frozen candidate fires the OR join other than exactly once in any run",
+    "the frozen candidate has a runtime error in any probe run",
+    "ProofDiff does not select flow.parallel_or_producers_complete",
+    "ProofDiff selects an unrelated contract without fallback justification",
+    "fallback is applied despite direct source coverage",
+    "the prospective repair does not produce PASS",
+    "the reverse regression is not surfaced as REVIEW"
+  ]
+}

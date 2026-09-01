@@ -1,6 +1,6 @@
 # ProofDiff examples
 
-This directory contains runnable ProofDiff examples.
+This directory contains runnable ProofDiff examples and registered validation pilots.
 
 ## support-agent
 
@@ -31,6 +31,23 @@ This pilot validates a narrow deterministic behavior claim.
 It does not establish production recall, customer validation, or
 product-market fit.
 
+## crewai-or-listener-prospective
+
+A prospective cross-repository pilot registered while `crewAIInc/crewAI`
+pull request #7184 was still open and unmerged.
+
+It freezes:
+
+- target base and candidate revisions;
+- an external public issue reproduction;
+- the behavioral claim and probe protocol;
+- an eight-contract control universe;
+- expected selection and decision outcomes;
+- failure criteria before live capture and external maintainer resolution.
+
+No outcome should be added to this pilot until its registration is merged to
+ProofDiff `main`.
+
 ## Running examples
 
 From the repository root:
@@ -40,4 +57,5 @@ python examples/agentguard-mcp-exit-race/prepare.py \
   --output .proofdiff/pilots/agentguard-mcp-exit-race
 ```
 
-See each example directory README for details.
+The CrewAI prospective pilot is intentionally registration-only until its
+preregistration commit is merged. See each example directory README for details.

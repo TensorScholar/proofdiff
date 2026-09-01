@@ -1,0 +1,13 @@
+{
+  "id": "agent.output_schema_preserved",
+  "title": "Agent structured output schema remains satisfied",
+  "risk": "medium",
+  "tags": ["prospective", "agent", "schema"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["agent"]
+  },
+  "expect": {
+    "output_contains": ["agent output schema preserved"]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "block_on_any_critical_failure": true,
+  "block_on_missing_critical": true,
+  "block_on_new_critical_regression": true,
+  "review_on_empty_selection": true,
+  "review_on_fallback": true,
+  "review_on_high_risk_capability_change": true,
+  "review_on_uncovered_high_change": true
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": "1",
+  "pilot_id": "CREWAI-OR-PROSPECTIVE-001",
+  "proofdiff": {
+    "repository": "TensorScholar/proofdiff",
+    "registration_base_sha": "8d3e81ab2e676188b6525a2245dce3342ccd3e39"
+  },
+  "target": {
+    "repository": "crewAIInc/crewAI",
+    "issue": 7183,
+    "issue_title": "[BUG] or_() join cancels parallel listener branches that should complete",
+    "issue_state_at_registration": "open",
+    "issue_reported_revision": "381fef73be1803d0b4676f88cbae57d332cb9cac",
+    "pull_request": 7184,
+    "pull_request_title": "fix(flow): preserve parallel branches feeding OR listeners",
+    "pull_request_state_at_registration": "open",
+    "pull_request_merged_at_registration": false,
+    "pull_request_created_at": "2026-09-01T05:07:22Z",
+    "pull_request_last_observed_update_at": "2026-09-01T08:07:09Z",
+    "base_sha": "ec53d6f53448fcc7842f4d4d5f3272d2e7782557",
+    "candidate_sha": "18a7a2d3a60c852733ab0fff2f1d94ef3f4808ed",
+    "changed_paths": [
+      "lib/crewai/src/crewai/flow/runtime/__init__.py",
+      "lib/crewai/tests/test_flow.py"
+    ]
+  },
+  "public_issue_observation": {
+    "reported_failure": "when two listeners are independently triggered by one parent and both feed a downstream or_() listener, first-wins race handling cancels the slower producer",
+    "expected_behavior": [
+      "both independently triggered producer listeners complete",
+      "the downstream or_() listener fires exactly once",
+      "the OR condition does not cancel event producers"
+    ],
+    "reproduction_shape": "one synchronous start method fans out to fast and slow async listeners; a downstream listener listens to or_(fast_branch, slow_branch)"
+  },
+  "candidate_change_observation": {
+    "source_change": "removes OR producer racing/cancellation and executes the selected listener batch through asyncio.gather",
+    "candidate_test_change": "adds regression coverage for both producer completion and sibling completion after listener failure"
+  },
+  "evidence_allowed_for_registration": [
+    "public issue #7183 description and reproduction",
+    "public pull request #7184 source diff",
+    "frozen target commit identifiers"
+  ],
+  "evidence_excluded_from_independent_outcome": [
+    "pull-request author's self-reported test results",
+    "automated CodeRabbit or Cursor review conclusions",
+    "maintainer disposition not yet known at registration"
+  ],
+  "limitations": {
+    "independent_customer": false,
+    "target_repository_affiliated_with_proofdiff_author": false,
+    "target_pull_request_open_at_registration": true,
+    "live_runtime_capture_completed_at_registration": false,
+    "contract_universe": "pilot-curated",
+    "probe_scope": "deterministic public Flow API reproduction only"
+  }
+}

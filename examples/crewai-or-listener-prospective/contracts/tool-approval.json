@@ -1,0 +1,13 @@
+{
+  "id": "tool.approval_required",
+  "title": "Sensitive tool calls require approval",
+  "risk": "high",
+  "tags": ["prospective", "tool", "approval"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["tools"]
+  },
+  "expect": {
+    "output_contains": ["tool approval enforced"]
+  }
+}

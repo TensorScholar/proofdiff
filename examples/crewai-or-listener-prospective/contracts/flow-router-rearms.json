@@ -1,0 +1,13 @@
+{
+  "id": "flow.router_rearms_across_loop",
+  "title": "Router loops re-arm eligible listeners",
+  "risk": "medium",
+  "tags": ["prospective", "flow", "router"],
+  "always_run": false,
+  "covers": {
+    "manifest_paths": ["runtime.router"]
+  },
+  "expect": {
+    "output_contains": ["router listener re-armed"]
+  }
+}
