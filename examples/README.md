@@ -33,22 +33,21 @@ product-market fit.
 
 ## crewai-or-listener-prospective
 
-A prospective cross-repository pilot preregistered while `crewAIInc/crewAI`
-pull request #7184 was still open and unmerged.
+A successful prospective cross-repository pilot preregistered while
+`crewAIInc/crewAI` pull request #7184 was still open and unmerged.
 
-It freezes:
+It demonstrates:
 
-- target base and candidate revisions;
-- an external public issue reproduction;
-- the behavioral claim and five-run probe protocol;
-- an eight-contract control universe;
-- expected selection and decision outcomes;
-- failure criteria before live capture and external maintainer resolution.
+- preregistration before external resolution;
+- exact frozen base and candidate revisions;
+- a ProofDiff-owned deterministic five-run reproduction;
+- an eight-contract control universe with 1/8 relevant selection;
+- independent GitHub Actions capture and preserved raw observations;
+- PASS for the frozen repair and REVIEW for the reverse regression.
 
-The preregistration is now on protected ProofDiff `main`. A dedicated read-only
-GitHub Actions workflow performs independent capture against the exact frozen
-CrewAI revisions and preserves the resulting ProofDiff evidence as a workflow
-artifact.
+The target PR remained open and unmerged when the measured result was finalized.
+This pilot is external prospective evidence for the frozen behavior; it is not
+customer validation, general production recall, or product-market-fit evidence.
 
 ## Running examples
 
