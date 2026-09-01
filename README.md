@@ -8,7 +8,7 @@
   <a href="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/TensorScholar/proofdiff/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
   <img alt="Python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB">
-  <img alt="release candidate" src="https://img.shields.io/badge/status-release%20candidate-orange">
+  <img alt="stable" src="https://img.shields.io/badge/status-v0.1.0-2ea44f">
 </p>
 
 ProofDiff is an evidence-first behavioral change analysis tool for evolving AI systems. Its current
@@ -30,7 +30,8 @@ without claiming more than the supplied evidence proves.
 
 ## Quick start
 
-The release candidate is not advertised as published on PyPI. Install it from a checkout:
+ProofDiff `0.1.0` is distributed through GitHub Release assets and is not currently advertised on
+PyPI. Install from a checkout:
 
 ```bash
 git clone https://github.com/TensorScholar/proofdiff.git
@@ -195,21 +196,23 @@ See [`docs/architecture.md`](docs/architecture.md).
 
 ## Release status
 
-`0.1.0rc3` is an engineering release candidate, not a production-readiness claim. Release-candidate
-validation includes public Linux CI on Python 3.11, 3.12, 3.13, and 3.14; Ruff; strict mypy;
-branch-aware coverage enforcement; schema, architecture, and security checks; `pip-audit`; CodeQL;
-standard PEP 517 build and Twine validation; clean-wheel smoke installation; and conformance
-examples.
+`0.1.0` is the first stable ProofDiff release line. Stable validation includes public Linux CI on
+Python 3.11, 3.12, 3.13, and 3.14; Ruff; strict mypy; branch-aware coverage enforcement; schema,
+architecture, and security checks; `pip-audit`; CodeQL; standard PEP 517 build and Twine validation;
+clean-wheel smoke installation; conformance examples; canonical wheel/sdist/SBOM/checksum
+publication; and retrievable build-provenance attestation.
 
-One historical cross-repository AgentGuard retrospective pilot has been validated. It is evidence
-for a narrow deterministic retrospective claim, not independent prospective customer validation.
-The `v0.1.0rc3` tagged rehearsal also validated publication of the canonical wheel, sdist, SBOM, and
-checksum manifest with retrievable build provenance. Compatibility decisions for the `0.1.x` line
-are recorded in [`docs/architecture.md`](docs/architecture.md#compatibility-contract-for-v01x).
+Validation evidence includes a historical cross-repository AgentGuard retrospective pilot and the
+preregistered external CrewAI OR-listener prospective pilot. In the CrewAI pilot, the frozen base
+reproduced the registered bug in 5/5 runs, the frozen candidate satisfied the registered behavior in
+5/5 runs, and ProofDiff selected exactly 1/8 contracts with 87.5% suite reduction, classifying the
+repair as `PASS` / `fixed` and the reverse direction as `REVIEW` / `new_regression`. The target CrewAI
+PR remained open and unmerged through final pilot validation, preserving the prospective ordering.
 
-Stable `v0.1.0` remains gated on independent prospective or external real-world pilot evidence,
-resolution of material pilot findings, and a final stable cut through the same protected,
-attested release path.
+These pilots support narrow deterministic claims only. They do not establish customer validation,
+general production recall, product-market fit, overall target-system safety, or that every AI-system
+change is covered. Compatibility decisions for the `0.1.x` line are recorded in
+[`docs/architecture.md`](docs/architecture.md#compatibility-contract-for-v01x).
 
 ## Documentation
 
