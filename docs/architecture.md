@@ -62,6 +62,63 @@ Identical normalized inputs produce identical semantic digests, selections, repl
 decisions. Evidence provenance contains generation time and platform metadata, so the entire bundle
 is not byte-identical across runs; the decision inputs and content digests remain inspectable.
 
+## Compatibility contract for v0.1.x
+
+This section records the compatibility decisions accepted for the stable `v0.1.0` line. Release
+candidates remain pre-stable, but any deviation from these decisions before `v0.1.0` must be
+intentional and documented.
+
+### Runtime and platform
+
+- Supported CPython versions are 3.11, 3.12, 3.13, and 3.14.
+- The release-blocking public CI matrix is Linux. macOS and Windows may work, but they are not a
+  compatibility guarantee until equivalent CI coverage exists.
+- YAML input is an optional capability exposed through the `proofdiff[yaml]` extra; JSON-only use
+  has no mandatory runtime dependency.
+- The canonical distribution channel for the `0.1.x` line is GitHub Releases. PyPI is not part of
+  the compatibility contract unless it is explicitly introduced in a later release decision.
+
+### Stable public surfaces
+
+The following surfaces are compatibility-controlled after stable `v0.1.0`:
+
+1. The documented CLI commands and required flags for `init`, `snapshot`, `diff`, `select`, `check`,
+   and `verify`, plus `proofdiff --version`.
+2. CLI process status semantics: `0` for PASS/success, `1` for REVIEW, `2` for BLOCK, and `3` for
+   input, integrity, or verification errors. Human-readable console wording is not a machine API.
+3. The package-level Python interface exported by `proofdiff.__all__`: `CheckRequest`, `Decision`,
+   `DecisionStatus`, `run_check`, and `__version__`. Imports from internal `proofdiff.engine`,
+   `proofdiff.domain`, `proofdiff.cli`, or `proofdiff.reporting` modules are not compatibility
+   promises unless separately documented.
+4. The checked-in manifest, contract, trace, and policy JSON Schemas under `schemas/`.
+5. The documented closed-set evidence-bundle file layout and the semantics required by
+   `proofdiff verify`.
+
+### Schema evolution
+
+The current input schemas are versioned with the ProofDiff package rather than by a required
+in-document schema-version field. Within `0.1.x`, additive optional fields are permitted when older
+readers remain functional. Adding new required fields, removing accepted fields, changing an
+existing field's meaning, or tightening validation in a way that rejects previously valid `0.1.x`
+inputs is a breaking change and requires either a new explicitly versioned schema surface or the
+`0.2.0` line.
+
+The same rule applies to evidence semantics: additive metadata may be introduced only when the
+closed-set verifier and supported `0.1.x` consumers remain compatible. Renaming/removing evidence
+files or changing the meaning of decision/provenance fields is breaking.
+
+### Versioning and deprecation
+
+After stable `v0.1.0`, patch releases in the `0.1.x` line must not intentionally break the public
+surfaces above. A breaking change requires `0.2.0` or a separately versioned opt-in surface. When a
+surface can be retired without an urgent security requirement, deprecation should be documented
+before removal. Security fixes may reject previously accepted unsafe input when preserving the old
+behavior would violate an explicit security invariant; such changes must be called out in release
+notes.
+
+Benchmark values, report prose, internal module layout, implementation details, and ordering of
+non-contractual diagnostic text are not compatibility guarantees.
+
 ## Extension policy
 
 Adapters for OpenTelemetry, MCP inventory, or provider trace formats should normalize external
