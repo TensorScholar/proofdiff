@@ -131,8 +131,12 @@ def main() -> int:
     assert base_summary["incomplete_runs"] >= base_expected["minimum_incomplete_runs"], base_summary
     assert base_summary["join_violation_runs"] <= base_expected["maximum_join_violation_runs"], base_summary
     assert candidate_summary["incomplete_runs"] <= candidate_expected["maximum_incomplete_runs"], candidate_summary
-    assert candidate_summary["join_violation_runs"] <= candidate_expected["maximum_join_violation_runs"], candidate_summary
-    assert candidate_summary["runtime_error_runs"] <= candidate_expected["maximum_runtime_error_runs"], candidate_summary
+    assert candidate_summary["join_violation_runs"] <= candidate_expected["maximum_join_violation_runs"], (
+        candidate_summary
+    )
+    assert candidate_summary["runtime_error_runs"] <= candidate_expected["maximum_runtime_error_runs"], (
+        candidate_summary
+    )
 
     repair_selection = _verify_selection(args.repair_evidence, registration)
     regression_selection = _verify_selection(args.regression_evidence, registration)
