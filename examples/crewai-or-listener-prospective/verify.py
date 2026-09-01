@@ -175,7 +175,10 @@ def main() -> int:
             "prospective_repair": repair,
             "counterfactual_regression": regression,
         },
-        "claim_scope": "independent deterministic probe of the frozen CrewAI OR-listener behavior; not customer validation or general production recall",
+        "claim_scope": (
+            "independent deterministic probe of the frozen CrewAI OR-listener behavior; "
+            "not customer validation or general production recall"
+        ),
     }
     args.results_out.parent.mkdir(parents=True, exist_ok=True)
     args.results_out.write_text(json.dumps(results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
