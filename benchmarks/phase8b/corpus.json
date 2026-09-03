@@ -1,0 +1,795 @@
+{
+  "schema_version": "1.0",
+  "phase": "8B",
+  "corpus_status": "frozen",
+  "experiment_status": "preregistering",
+  "created_at": "2026-09-03",
+  "frozen_at": "2026-09-03T12:09:43Z",
+  "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
+  "targets": {
+    "new_historical_cases": 20,
+    "minimum_repositories": 5,
+    "control_cases": 3
+  },
+  "cases": [
+    {
+      "case_id": "pydantic-xai-stream-tool-boundary-7925",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/8453eff1c25f17c885c292a18c1d58e3832fd52d",
+      "pr_number": 7925,
+      "upstream_reference": "issue #7923",
+      "base_sha": "f8853dca678e781480898bafd7b946276c38bb1f",
+      "head_sha": "8453eff1c25f17c885c292a18c1d58e3832fd52d",
+      "candidate_repo": null,
+      "title": "Fix XaiModel streamed text after a native tool call being merged into the ended pre-call part",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["streaming", "native-tools", "provider-adapter", "output-validation"],
+      "protected_invariants": [
+        "Text streamed after a native tool call remains a distinct live part and reaches final output.",
+        "A delta is never applied to a part whose lifecycle already ended."
+      ],
+      "oracle": {
+        "paths": ["tests/models/test_xai.py"],
+        "tests": [
+          "test_xai_stream_text_after_server_side_tool_call_returns_output",
+          "test_xai_stream_interleaved_text_part_lifecycle_events"
+        ],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/8453eff1c25f17c885c292a18c1d58e3832fd52d"
+      },
+      "discrimination_reason": "A one-line provider adapter change crosses stream part identity, native-tool boundaries, CallToolsNode semantics, and retry exhaustion; a coarse model/provider tag is expected to over-select sibling xAI behavior.",
+      "family_id": "pydantic-stream-tool-lifecycle",
+      "notes": "Direct upstream commit with explicit pre-fix failure explanation and focused regression tests."
+    },
+    {
+      "case_id": "pydantic-cancel-first-tool-resume-7993",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/1467456556b9109b5b92eb7c7def8eabb5287775",
+      "pr_number": 7993,
+      "upstream_reference": null,
+      "base_sha": "78acea8fab822f482eefbf4cbb26e8a84668eb51",
+      "head_sha": "1467456556b9109b5b92eb7c7def8eabb5287775",
+      "candidate_repo": null,
+      "title": "Keep a run cancelled during its first tool call resumable",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["cancellation", "tool-execution", "message-history", "resume"],
+      "protected_invariants": [
+        "Cancellation during the first or only tool call records an interrupted request even when no tool completed.",
+        "Interrupted history synthesizes missing tool returns and can resume with or without a new prompt."
+      ],
+      "oracle": {
+        "paths": ["tests/test_agent.py", "tests/test_cancellation.py"],
+        "tests": [
+          "test_failed_run_history_is_resumable",
+          "test_cancel_during_only_tool_call_is_resumable",
+          "test_cancel_during_only_tool_call_is_resumable_without_a_new_prompt"
+        ],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/1467456556b9109b5b92eb7c7def8eabb5287775"
+      },
+      "discrimination_reason": "The blast radius crosses abnormal termination, tool lifecycle, persisted message state, provider-valid history repair, and future resume semantics rather than a single path-local function.",
+      "family_id": "pydantic-interrupted-history",
+      "notes": "Oracle names are taken from the upstream regression patch; exact source URL is canonical if upstream later moves tests."
+    },
+    {
+      "case_id": "pydantic-deferred-cross-category-7626",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/2dbcf1dff61b439d4dcb9f027a764802cc669b6e",
+      "pr_number": 7626,
+      "upstream_reference": null,
+      "base_sha": "194fb2ad5521b97a415709649a3618a27caa03fc",
+      "head_sha": "2dbcf1dff61b439d4dcb9f027a764802cc669b6e",
+      "candidate_repo": null,
+      "title": "Fix DeferredToolRequests.remaining resolving cross-category result IDs",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["deferred-tools", "approvals", "external-actions", "resume"],
+      "protected_invariants": [
+        "An approval result can resolve only an approval request with the same ID.",
+        "A call result can resolve only a deferred call with the same ID.",
+        "A cross-category result cannot resume the model or execute an external call."
+      ],
+      "oracle": {
+        "paths": ["tests/test_capabilities.py"],
+        "tests": [
+          "test_deferred_tool_requests_remaining_cross_category_ids_do_not_resolve",
+          "test_deferred_tool_handler_ignores_cross_category_ids"
+        ],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/2dbcf1dff61b439d4dcb9f027a764802cc669b6e"
+      },
+      "discrimination_reason": "The safety property is semantic category ownership of an ID; file or component tags cannot explain why a same textual ID in a different result category must not authorize progress.",
+      "family_id": "pydantic-deferred-tool-ownership",
+      "notes": "Small focused production diff plus explicit no-external-call regression oracle."
+    },
+    {
+      "case_id": "pydantic-ui-stream-cancel-state-7675",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/897d40cd17f8b84c0e99fe5d38e7c763c3110216",
+      "pr_number": 7675,
+      "upstream_reference": null,
+      "base_sha": "2d18ef8ec3644ead8381ca42bdf5ee5a1e80ed33",
+      "head_sha": "897d40cd17f8b84c0e99fe5d38e7c763c3110216",
+      "candidate_repo": null,
+      "title": "Fix stale UIEventStream part state on cancellation",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["streaming", "cancellation", "ui-events", "tool-call-deltas"],
+      "protected_invariants": [
+        "Synthetic PartEnd emitted on cancellation reflects all deltas already exposed to the client.",
+        "Cleanup errors do not replace the original stream failure."
+      ],
+      "oracle": {
+        "paths": ["tests/ui/test_event_stream.py"],
+        "tests": [
+          "test_cancelled_part_end_contains_accumulated_part",
+          "test_part_end_delta_matches_handler_output_on_error",
+          "test_part_cleanup_error_does_not_replace_stream_error"
+        ],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/897d40cd17f8b84c0e99fe5d38e7c763c3110216",
+        "notes": "Upstream commit carries parametrized text, thinking, function-tool and native-tool cases."
+      },
+      "discrimination_reason": "The invariant depends on temporal correspondence between emitted deltas and synthetic cleanup state, not merely the UIEventStream component membership.",
+      "family_id": "pydantic-stream-tool-lifecycle",
+      "notes": "Same broad stream family as #7925; family-aware analysis prevents overweighting correlated cases."
+    },
+    {
+      "case_id": "pydantic-cohere-zero-arg-tool-7720",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/49a4e6f5aeb62936d5134ea5aff644263248b754",
+      "pr_number": 7720,
+      "upstream_reference": null,
+      "base_sha": "ae37b7fd495a934e7d8322ce81836ee6c3868aa6",
+      "head_sha": "49a4e6f5aeb62936d5134ea5aff644263248b754",
+      "candidate_repo": null,
+      "title": "Fix dropped zero-argument tool calls in CohereModel",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["provider-adapter", "tool-calls", "history-roundtrip", "retry"],
+      "protected_invariants": [
+        "Falsy None or empty-string arguments do not cause a valid named zero-argument tool call to be dropped.",
+        "The zero-argument tool call survives the assistant/tool history round trip without a retry prompt."
+      ],
+      "oracle": {
+        "paths": ["tests/models/test_cohere.py"],
+        "tests": [
+          "test_zero_argument_tool_call",
+          "test_zero_argument_tool_call_round_trip",
+          "test_tool_call_without_function_skipped"
+        ],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/49a4e6f5aeb62936d5134ea5aff644263248b754"
+      },
+      "discrimination_reason": "A generic truthiness check changes provider parsing, tool execution, retry behavior, and request-history validity; the protected behavior is narrower than a Cohere model tag.",
+      "family_id": "pydantic-provider-tool-parsing",
+      "notes": "Very small production change with extensive upstream regression coverage."
+    },
+    {
+      "case_id": "adk-function-response-temporal-ownership-6761",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/deee6d2c474ccb9710e0b25a0b290bb76cc54c45",
+      "pr_number": null,
+      "upstream_reference": "closes #6761",
+      "base_sha": "2aea8595fb1c5e0fddef7893a1985dc96dc82692",
+      "head_sha": "deee6d2c474ccb9710e0b25a0b290bb76cc54c45",
+      "candidate_repo": null,
+      "title": "fix(flows): pair a function response with the call it answers",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["function-calls", "history", "async-tools", "event-ordering"],
+      "protected_invariants": [
+        "A reused function-call ID pairs each response with the newest preceding owning call.",
+        "Multiple progress responses for one call retain the final update without stealing a later call's response."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/flows/llm_flows/test_contents.py"],
+        "tests": [
+          "test_rearrange_async_function_responses_reused_id_across_tools",
+          "test_rearrange_async_function_responses_reused_id_same_tool",
+          "test_rearrange_async_function_responses_reused_id_keeps_last_update"
+        ],
+        "source_url": "https://github.com/google/adk-python/commit/deee6d2c474ccb9710e0b25a0b290bb76cc54c45"
+      },
+      "discrimination_reason": "Correctness depends on ID plus temporal ownership and call ordering. A static flow tag cannot encode which repeated-ID relation is safe.",
+      "family_id": "adk-tool-history-ownership",
+      "notes": "Direct upstream commit with three explicit repeated-ID oracles."
+    },
+    {
+      "case_id": "adk-parallel-agent-failure-propagation-5455",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/ece924c2dd6bd5124a70e5bbc4164bf886ceb852",
+      "pr_number": null,
+      "upstream_reference": "closes #5455",
+      "base_sha": "d1ed104d2a9eb30ea0994ac21fd5b74bc5a5b573",
+      "head_sha": "ece924c2dd6bd5124a70e5bbc4164bf886ceb852",
+      "candidate_repo": null,
+      "title": "fix: deliver parallel sub-agent failures to the caller",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["parallel-agents", "async-generators", "exceptions", "streaming"],
+      "protected_invariants": [
+        "A parallel sub-agent failure reaches the caller even when the merged generator is suspended at yield.",
+        "A branch that fails before emitting an event cannot appear successful."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/agents/test_parallel_agent.py"],
+        "tests": [
+          "test_sub_agent_failure_reaches_busy_caller",
+          "test_merge_agent_run_pre_3_11_surfaces_failure_without_events"
+        ],
+        "source_url": "https://github.com/google/adk-python/commit/ece924c2dd6bd5124a70e5bbc4164bf886ceb852"
+      },
+      "discrimination_reason": "The bug is an async control-flow interaction between branch task lifetime, queue signaling and generator suspension, broader than the modified ParallelAgent lines but narrower than all parallel-agent tests.",
+      "family_id": "adk-parallel-control-flow",
+      "notes": "Both Python 3.11+ and pre-3.11 merge paths are covered upstream."
+    },
+    {
+      "case_id": "adk-workflow-before-run-early-exit-6032",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/dac18699b9ce423f7e98d1cb245cfdde20b18147",
+      "pr_number": 6032,
+      "upstream_reference": "fixes #6013",
+      "base_sha": "a01d516a6bcf93f12d26a083af587455d0bb2592",
+      "head_sha": "dac18699b9ce423f7e98d1cb245cfdde20b18147",
+      "candidate_repo": null,
+      "title": "fix: honor before_run_callback early-exit for Workflow runs",
+      "criticality": "high",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["workflow", "callbacks", "early-exit", "session-persistence"],
+      "protected_invariants": [
+        "A before_run callback that returns Content terminates Workflow execution with that Content, matching the non-workflow contract.",
+        "Early-exit output is persisted without starting the workflow root node."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/workflow/test_workflow_failures.py"],
+        "tests": ["workflow before_run callback Content early-exit regression cases"],
+        "source_url": "https://github.com/google/adk-python/commit/dac18699b9ce423f7e98d1cb245cfdde20b18147"
+      },
+      "discrimination_reason": "The same callback contract spans workflow and non-workflow execution paths; component-only mapping is likely to miss contract equivalence or over-select all runner behavior.",
+      "family_id": "adk-workflow-callback-contract",
+      "notes": "Larger runner refactor than most cases; retained with medium confounding risk."
+    },
+    {
+      "case_id": "adk-hitl-resume-no-synthetic-shadow-e753",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/e753651b7df26febe00bde2cb043225e644cd207",
+      "pr_number": null,
+      "upstream_reference": null,
+      "base_sha": "d9f4d3d288257593471fc708a9ab851779005ca5",
+      "head_sha": "e753651b7df26febe00bde2cb043225e644cd207",
+      "candidate_repo": null,
+      "title": "fix: prevent duplicate synthetic user event on single-turn agent resumption",
+      "criticality": "critical",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["hitl", "resume", "tool-confirmation", "message-history"],
+      "protected_invariants": [
+        "Resuming from an HITL tool confirmation does not inject a synthetic user event that shadows the user's FunctionResponse.",
+        "A confirmed single-turn tool request does not enter an infinite confirmation loop."
+      ],
+      "oracle": {
+        "paths": ["upstream regression patch in commit e753651b7df26febe00bde2cb043225e644cd207"],
+        "tests": ["test_single_turn_input_skipped_when_resuming"],
+        "source_url": "https://github.com/google/adk-python/commit/e753651b7df26febe00bde2cb043225e644cd207"
+      },
+      "discrimination_reason": "The failure crosses persisted HITL state, resume inputs, synthetic-message injection and confirmation lifecycle; its infinite-loop consequence is not captured by a local input-preparation tag.",
+      "family_id": "adk-hitl-resume",
+      "notes": "Direct upstream commit; source URL is canonical for exact test location."
+    },
+    {
+      "case_id": "adk-remote-a2a-workflow-output-5852",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/5a12ee0998ac51b4add181ff7914cf7a7826072a",
+      "pr_number": 5852,
+      "upstream_reference": null,
+      "base_sha": "2eca8b11ceb890614370c64a2ad56a0164059c97",
+      "head_sha": "5a12ee0998ac51b4add181ff7914cf7a7826072a",
+      "candidate_repo": null,
+      "title": "fix(a2a): Promote RemoteA2aAgent response to workflow node output",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["a2a", "workflow", "join-node", "streaming-state"],
+      "protected_invariants": [
+        "A terminal RemoteA2aAgent textual response becomes the workflow node output consumed by downstream JoinNode aggregation.",
+        "Partial, non-final, thought-only and input-required events never claim the single workflow output slot."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/agents/test_remote_a2a_agent.py"],
+        "tests": ["TestRemoteA2aAgentWorkflowOutput regression suite (20 cases)"],
+        "source_url": "https://github.com/google/adk-python/commit/5a12ee0998ac51b4add181ff7914cf7a7826072a",
+        "notes": "Upstream report also documents a real multi-agent A2A workflow E2E reproduction."
+      },
+      "discrimination_reason": "The impact path crosses remote-agent event semantics, terminal-state filtering, Context.output ownership, workflow completion and JoinNode aggregation.",
+      "family_id": "adk-workflow-output-propagation",
+      "notes": "Narrow agent-boundary production fix with substantial focused tests."
+    },
+    {
+      "case_id": "adk-trace-http-credential-redaction-761f",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/761f1ac75d0479e21d9f3386189d0b54990d05b4",
+      "pr_number": null,
+      "upstream_reference": null,
+      "base_sha": "8930d9b19338873d091215a1e56f99ce6fd2060b",
+      "head_sha": "761f1ac75d0479e21d9f3386189d0b54990d05b4",
+      "candidate_repo": null,
+      "title": "fix: stop tracing credentials passed via config.http_options",
+      "criticality": "critical",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["telemetry", "credentials", "http-options", "privacy"],
+      "protected_invariants": [
+        "Credential-bearing http_options fields never reach exported LLM request trace attributes.",
+        "Non-sensitive http_options such as base_url remain traceable."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/telemetry/test_spans.py"],
+        "tests": ["test_build_llm_request_for_trace_excludes_http_option_credentials"],
+        "source_url": "https://github.com/google/adk-python/commit/761f1ac75d0479e21d9f3386189d0b54990d05b4"
+      },
+      "discrimination_reason": "A tracing serializer change carries a security invariant about free-form credential channels; selecting all tracing tests is safe but coarse, while skipping sibling telemetry blindly is not auditable.",
+      "family_id": "adk-sensitive-data-boundaries",
+      "notes": "Sentinel-secret upstream oracle directly asserts absence from serialized trace data."
+    },
+    {
+      "case_id": "adk-gke-sandbox-no-cluster-credential-8207",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/8207880101292bdf1037cb3bfdf90d3a3691ce0c",
+      "pr_number": null,
+      "upstream_reference": null,
+      "base_sha": "eee700a01696cabb42583611766806de2d8574be",
+      "head_sha": "8207880101292bdf1037cb3bfdf90d3a3691ce0c",
+      "candidate_repo": null,
+      "title": "fix: do not mount a cluster credential into the GKE code sandbox",
+      "criticality": "critical",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["code-execution", "gke", "sandbox", "credentials"],
+      "protected_invariants": [
+        "A pod executing model-generated code has automount_service_account_token=false and therefore does not receive the cluster service-account credential."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/code_executors/test_gke_code_executor.py"],
+        "tests": ["test_create_job_manifest_structure"],
+        "source_url": "https://github.com/google/adk-python/commit/8207880101292bdf1037cb3bfdf90d3a3691ce0c"
+      },
+      "discrimination_reason": "The changed manifest field is tiny, but the invariant belongs to the trust boundary between untrusted model-generated code and Kubernetes credentials; it should map to sandbox security evidence, not every GKE executor behavior.",
+      "family_id": "adk-sensitive-data-boundaries",
+      "notes": "Selected over ADK 550189... because this commit protects one critical invariant with very low confounding risk."
+    },
+    {
+      "case_id": "openai-serialized-approval-ownership-4613",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "openai/openai-agents-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/openai/openai-agents-python/commit/b354ef0aba8850dd9a93c69b2db25932df1ade59",
+      "pr_number": 4613,
+      "upstream_reference": null,
+      "base_sha": "72b2c670546942bdaaf66cc8d6b3a67d1a2fe5bc",
+      "head_sha": "b354ef0aba8850dd9a93c69b2db25932df1ade59",
+      "candidate_repo": null,
+      "title": "fix(core): preserve serialized approval resume ownership",
+      "criticality": "critical",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["hitl", "serialization", "approvals", "output-guardrails", "sessions"],
+      "protected_invariants": [
+        "Current-response generated-item ownership survives serialization so a later-turn approval can resume safely.",
+        "Released-schema or malformed ownership that cannot prove the response boundary fails before approval-tool execution."
+      ],
+      "oracle": {
+        "paths": ["tests/test_agent_runner_streamed.py"],
+        "tests": ["test_serialized_later_turn_approval_with_output_guardrail_resumes"],
+        "source_url": "https://github.com/openai/openai-agents-python/commit/b354ef0aba8850dd9a93c69b2db25932df1ade59",
+        "notes": "Upstream parametrizes streamed/non-streamed, session/no-session and mixed tool positions, and checks fail-closed malformed ownership."
+      },
+      "discrimination_reason": "The invariant is identity/provenance across serialized state and approval authorization. It is not equivalent to all HITL or all session behavior and is a strong skip-proof challenge.",
+      "family_id": "openai-resume-session-state",
+      "notes": "Larger change retained because the upstream oracle explicitly proves both safe resume and fail-closed non-execution."
+    },
+    {
+      "case_id": "openai-session-reasoning-id-policy-4278",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "openai/openai-agents-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/openai/openai-agents-python/commit/a3f2bb8eea4af1d4a4acb7ff3ea523eacb1e9ebb",
+      "pr_number": 4278,
+      "upstream_reference": "issue #2020 reproduction",
+      "base_sha": "47ff39bf7904bbc8c06681f5fa70c0c3025b882a",
+      "head_sha": "a3f2bb8eea4af1d4a4acb7ff3ea523eacb1e9ebb",
+      "candidate_repo": null,
+      "title": "fix(sessions): apply the reasoning item id policy to stored session history",
+      "criticality": "high",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["sessions", "reasoning-items", "handoffs", "resume", "streaming"],
+      "protected_invariants": [
+        "reasoning_item_id_policy=omit applies to stored history on read as well as newly written items.",
+        "A revoked historical rs_* identifier cannot be replayed into a later model request and cause a 404."
+      ],
+      "oracle": {
+        "paths": ["tests/test_agent_runner.py", "tests/test_agent_runner_streamed.py"],
+        "tests": [
+          "test_omit_policy_strips_reasoning_ids_already_stored_in_the_session",
+          "test_streamed_omit_policy_strips_reasoning_ids_already_stored_in_the_session"
+        ],
+        "source_url": "https://github.com/openai/openai-agents-python/commit/a3f2bb8eea4af1d4a4acb7ff3ea523eacb1e9ebb"
+      },
+      "discrimination_reason": "The policy must hold across write, read, replay, handoff and streamed/non-streamed paths. Static file mapping either misses cross-path consistency or selects most of session handling.",
+      "family_id": "openai-resume-session-state",
+      "notes": "Oracle simulates the real Responses API 404 for a revoked reasoning item ID."
+    },
+    {
+      "case_id": "openai-json-validation-redaction-4211",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "openai/openai-agents-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/openai/openai-agents-python/commit/0068ce4329d0af7dd5398c3f300ab178c986495e",
+      "pr_number": 4211,
+      "upstream_reference": null,
+      "base_sha": "f65a89b01575a43729635fd9a18c686f4731faae",
+      "head_sha": "0068ce4329d0af7dd5398c3f300ab178c986495e",
+      "candidate_repo": null,
+      "title": "fix: redact JSON validation errors",
+      "criticality": "critical",
+      "confounding_risk": "high",
+      "behavior_surfaces": ["validation", "privacy", "tracebacks", "handoffs", "realtime", "tracing"],
+      "protected_invariants": [
+        "Payload-bearing JSON validation errors exposed to callers, logs or traces do not retain sensitive input data through messages, run_data, cause/context or traceback frames.",
+        "Redaction is preserved across streamed, realtime, handoff and final-output error propagation paths."
+      ],
+      "oracle": {
+        "paths": ["tests/test_error_logging_redaction.py", "tests/realtime/test_session.py", "tests/test_invalid_final_output_handler.py"],
+        "tests": ["upstream JSON/tool-data redaction regression suite"],
+        "source_url": "https://github.com/openai/openai-agents-python/commit/0068ce4329d0af7dd5398c3f300ab178c986495e"
+      },
+      "discrimination_reason": "This is an intentionally difficult cross-cutting privacy case: the protected invariant propagates through exception lifetimes rather than one module. BIG must remain conservative; high confounding risk is reported, not hidden.",
+      "family_id": "openai-sensitive-error-boundaries",
+      "notes": "Large cross-cutting change. Kept because it independently labels a critical security invariant that should punish false-safe selection."
+    },
+    {
+      "case_id": "openai-resumed-session-write-recovery-4630",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "openai/openai-agents-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/openai/openai-agents-python/commit/40f0d9fccbe03bf704e4ef044c7c81b807e594da",
+      "pr_number": 4630,
+      "upstream_reference": null,
+      "base_sha": "6268f43e3aaf3d9ba193bff267345a8dc62f4223",
+      "head_sha": "40f0d9fccbe03bf704e4ef044c7c81b807e594da",
+      "candidate_repo": null,
+      "title": "fix(sessions): recover failed resumed Session writes before model calls",
+      "criticality": "critical",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["sessions", "resume", "tool-execution", "durability", "compaction"],
+      "protected_invariants": [
+        "A failed or cancelled resumed-session append remains pending across serialization and is reconciled before the next model call.",
+        "Recovery never reruns already completed tools and fails closed when authoritative history is changed or ambiguous.",
+        "A failed underlying Session mutation invalidates stale compaction cache state."
+      ],
+      "oracle": {
+        "paths": ["upstream regression patch in commit 40f0d9fccbe03bf704e4ef044c7c81b807e594da"],
+        "tests": ["resumed Session write recovery, ambiguity rejection, serialization and streamed/non-streamed regression cases"],
+        "source_url": "https://github.com/openai/openai-agents-python/commit/40f0d9fccbe03bf704e4ef044c7c81b807e594da"
+      },
+      "discrimination_reason": "The invariant spans durable checkpoint state, uncertain backend acknowledgement, exact-history reconciliation, model-call ordering and no-reexecution semantics.",
+      "family_id": "openai-resume-session-state",
+      "notes": "Family-aware scoring prevents three session/resume cases from being treated as independent evidence of the same mapping capability."
+    },
+    {
+      "case_id": "crewai-memory-config-reuse-7068",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "crewAIInc/crewAI",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/crewAIInc/crewAI/commit/98799a3b094e66293662d08fc45a6d62d2909c34",
+      "pr_number": 7068,
+      "upstream_reference": null,
+      "base_sha": "1cef70de520995bd7271ee78a939b966ddc3af9a",
+      "head_sha": "98799a3b094e66293662d08fc45a6d62d2909c34",
+      "candidate_repo": null,
+      "title": "fix(memory): preserve reusable scope configs",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["memory", "configuration", "validation", "state-mutation"],
+      "protected_invariants": [
+        "Validating or normalizing memory scope/slice configuration does not mutate caller-owned mappings.",
+        "The same configuration object can be reused with identical semantics."
+      ],
+      "oracle": {
+        "paths": ["upstream memory regression tests in commit 98799a3b094e66293662d08fc45a6d62d2909c34"],
+        "tests": [
+          "test_memory_scope_config_can_be_reused",
+          "test_memory_slice_config_can_be_reused_without_normalizing_it_in_place",
+          "test_memory_kind_inference_preserves_input"
+        ],
+        "source_url": "https://github.com/crewAIInc/crewAI/commit/98799a3b094e66293662d08fc45a6d62d2909c34"
+      },
+      "discrimination_reason": "The diff is local but the protected behavior is aliasing/ownership across multiple future constructions. A path rule sees validators; the semantic invariant is caller-state immutability.",
+      "family_id": "crewai-state-ownership",
+      "notes": "Small, focused, low-confounding state-mutation case."
+    },
+    {
+      "case_id": "crewai-hitl-collapse-fail-closed-7188",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "crewAIInc/crewAI",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/crewAIInc/crewAI/commit/8e462056196349b3134ad7adcb5f354058332645",
+      "pr_number": 7188,
+      "upstream_reference": "OSS-151",
+      "base_sha": "1bc2e0722d1bea9db82f399d6124f6fb5b0ab78c",
+      "head_sha": "8e462056196349b3134ad7adcb5f354058332645",
+      "candidate_repo": null,
+      "title": "Fail closed when human-feedback emit cannot classify",
+      "criticality": "critical",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["hitl", "routing", "llm-classification", "policy"],
+      "protected_invariants": [
+        "Human-feedback emit routing does not silently choose emit[0] when classification cannot be performed or matched.",
+        "Unclassifiable feedback raises HumanFeedbackCollapseError; an explicit empty-skip default remains distinct from classification failure.",
+        "An unspecified collapse LLM resolves through project model configuration instead of a hard-coded provider."
+      ],
+      "oracle": {
+        "paths": ["upstream flow human-feedback regression tests in commit 8e462056196349b3134ad7adcb5f354058332645"],
+        "tests": ["test_json_without_outcome_raises", "human-feedback collapse matching/failure regression suite"],
+        "source_url": "https://github.com/crewAIInc/crewAI/commit/8e462056196349b3134ad7adcb5f354058332645"
+      },
+      "discrimination_reason": "This is a release-policy-grade fail-open/fail-closed invariant spanning LLM resolution, classification and graph routing. It directly tests whether impact selection understands consequence rather than file adjacency.",
+      "family_id": "crewai-hitl-routing-policy",
+      "notes": "Coherent multi-file change retained at medium confounding risk because the central safety invariant is explicit."
+    },
+    {
+      "case_id": "crewai-conversation-fallback-persist-7026",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "crewAIInc/crewAI",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/crewAIInc/crewAI/commit/56e0e85a8186abd2929c17fed22e54bbbc327778",
+      "pr_number": 7026,
+      "upstream_reference": "OSS-115",
+      "base_sha": "871c9c5131f4097cf8c5bafe228e84b697361a43",
+      "head_sha": "56e0e85a8186abd2929c17fed22e54bbbc327778",
+      "candidate_repo": null,
+      "title": "Persist custom conversational replies after fallback append",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["flows", "conversation", "persistence", "event-emission"],
+      "protected_invariants": [
+        "A public string returned by a custom @listen route is persisted after the fallback assistant append so a fresh Flow instance restores the assistant turn.",
+        "Built-in converse does not double-append and message-added events remain exactly once per user/assistant turn."
+      ],
+      "oracle": {
+        "paths": ["upstream conversational-flow regression tests in commit 56e0e85a8186abd2929c17fed22e54bbbc327778"],
+        "tests": ["custom @listen persisted restore", "built-in converse no-double-append", "single message-added event pair"],
+        "source_url": "https://github.com/crewAIInc/crewAI/commit/56e0e85a8186abd2929c17fed22e54bbbc327778"
+      },
+      "discrimination_reason": "The bug is caused by ordering between graph kickoff persistence and a post-kickoff fallback append; semantic timing, not path membership, determines the impacted restore contract.",
+      "family_id": "crewai-flow-persistence",
+      "notes": "Docs churn is excluded from the semantic label; production behavior is focused."
+    },
+    {
+      "case_id": "agno-studio-dispatch-cycle-depth-9745",
+      "arm": "historical",
+      "eligibility": "qualified",
+      "repo": "agno-agi/agno",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/agno-agi/agno/commit/0d156974c2b4a1a60cec58565cfae540c4b39925",
+      "pr_number": 9745,
+      "upstream_reference": null,
+      "base_sha": "090061ea570fb5209ae1bc8a53a36b51e53fda47",
+      "head_sha": "0d156974c2b4a1a60cec58565cfae540c4b39925",
+      "candidate_repo": null,
+      "title": "fix: refuse dispatch cycles and bound dispatch depth in the Studio dispatch tools",
+      "criticality": "critical",
+      "confounding_risk": "high",
+      "behavior_surfaces": ["dispatch", "teams", "workflows", "metadata-provenance", "cancellation", "security"],
+      "protected_invariants": [
+        "Self-dispatch and A-to-B-to-A cycles are refused using runtime lineage rather than prompt convention.",
+        "Dispatch depth is bounded and malformed or partially present reserved lineage metadata fails closed.",
+        "Caller-writable metadata cannot forge or reset reserved dispatch lineage/depth state.",
+        "Team/workflow cancellation can cascade to registered dispatched sub-runs."
+      ],
+      "oracle": {
+        "paths": ["upstream gated Studio/dispatch regression suites documented in commit 0d156974c2b4a1a60cec58565cfae540c4b39925"],
+        "tests": ["top-level self-dispatch refusal", "A-B-A cycle refusal", "depth-2 third-hop refusal", "reserved-metadata forgery tripwires", "28 targeted mutations killed"],
+        "source_url": "https://github.com/agno-agi/agno/commit/0d156974c2b4a1a60cec58565cfae540c4b39925",
+        "notes": "Upstream commit records explicit pre-fix baselines and mutation verification."
+      },
+      "discrimination_reason": "A highly cross-cutting adversarial case: lineage provenance, cycle detection, depth policy, metadata sanitization and cancellation span multiple dispatch surfaces. High confounding risk is intentional to test conservative widening on critical behavior.",
+      "family_id": "agno-dispatch-integrity",
+      "notes": "837 gated tests and 28 targeted mutations are reported upstream; this case is weighted by family and confounding risk rather than allowed to dominate."
+    },
+    {
+      "case_id": "control-openai-agents-chained-ref",
+      "arm": "control",
+      "eligibility": "control",
+      "repo": "openai/openai-agents-python",
+      "source_kind": "frozen_pair",
+      "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml",
+      "pr_number": null,
+      "upstream_reference": "Phase 8A external-validation-batch1",
+      "base_sha": "de60d05b0c5af345c8a3893673196156a38a249a",
+      "head_sha": "f32f613a7f502af445405d7ef55aae75a276f835",
+      "candidate_repo": "openai/openai-agents-python",
+      "title": "Phase 8A control: OpenAI Agents chained ref",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["tool-schema", "references"],
+      "protected_invariants": ["Retain the independently captured Phase 8A behavior label without reusing it to inflate the Phase 8B new-case target."],
+      "oracle": {
+        "paths": ["examples/external-validation-batch1/openai_agents_probe.py"],
+        "tests": ["three repeated frozen probe runs plus repair/reverse/full verification"],
+        "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml"
+      },
+      "discrimination_reason": "Calibration/control only; excluded from the twenty-new-case differentiation target.",
+      "family_id": "phase8a-control",
+      "notes": "Phase 8A selector tied static mapping; policy REVIEW semantics are preserved."
+    },
+    {
+      "case_id": "control-copilotkit-subgraph-context",
+      "arm": "control",
+      "eligibility": "control",
+      "repo": "CopilotKit/CopilotKit",
+      "source_kind": "frozen_pair",
+      "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml",
+      "pr_number": null,
+      "upstream_reference": "Phase 8A external-validation-batch1",
+      "base_sha": "3ff7a5160655e4fd1d59b541da1b83887d50307f",
+      "head_sha": "e9148b305025620e9f43c4eb3e597e5b9bcef419",
+      "candidate_repo": "CopilotKit/CopilotKit",
+      "title": "Phase 8A control: CopilotKit subgraph context",
+      "criticality": "high",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["subgraph", "context"],
+      "protected_invariants": ["Retain the independently captured Phase 8A subgraph-context label as a calibration control."],
+      "oracle": {
+        "paths": ["examples/external-validation-batch1/copilotkit_probe.py"],
+        "tests": ["three repeated frozen probe runs plus repair/reverse/full verification"],
+        "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml"
+      },
+      "discrimination_reason": "Calibration/control only; excluded from the twenty-new-case differentiation target.",
+      "family_id": "phase8a-control",
+      "notes": "Phase 8A ProofDiff selection count tied static tagging 2 vs 2."
+    },
+    {
+      "case_id": "control-langgraph-interrupt-wrapper",
+      "arm": "control",
+      "eligibility": "control",
+      "repo": "langchain-ai/langgraph",
+      "source_kind": "frozen_pair",
+      "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml",
+      "pr_number": null,
+      "upstream_reference": "Phase 8A external-validation-batch1",
+      "base_sha": "5931a5f0b313feff24e2516a586c55601b868ac1",
+      "head_sha": "4680a4e94fb503ec321ca6c0a1b0af36db8dd9e1",
+      "candidate_repo": "devansh-dek/langgraph",
+      "title": "Phase 8A control: LangGraph interrupt wrapper",
+      "criticality": "critical",
+      "confounding_risk": "low",
+      "behavior_surfaces": ["interrupts", "tool-node", "wrapper"],
+      "protected_invariants": ["Retain the Phase 8A critical reverse-regression label that ProofDiff blocked after harness repair."],
+      "oracle": {
+        "paths": ["examples/external-validation-batch1/langgraph_probe.py"],
+        "tests": ["three repeated frozen probe runs plus repair/reverse/full verification"],
+        "source_url": "https://github.com/TensorScholar/proofdiff/blob/main/.github/workflows/external-validation-batch1.yml"
+      },
+      "discrimination_reason": "Critical calibration/control only; excluded from the twenty-new-case target.",
+      "family_id": "phase8a-control",
+      "notes": "Candidate is a frozen fork revision, deliberately represented as a control rather than historical upstream evidence."
+    },
+    {
+      "case_id": "hold-pydantic-anthropic-upload-container-7864",
+      "arm": "hold",
+      "eligibility": "hold",
+      "repo": "pydantic/pydantic-ai",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/pydantic/pydantic-ai/commit/56b99f74a961aa1409fb0e2c21a4159f74bda952",
+      "pr_number": 7864,
+      "upstream_reference": null,
+      "base_sha": null,
+      "head_sha": "56b99f74a961aa1409fb0e2c21a4159f74bda952",
+      "candidate_repo": null,
+      "title": "Fix CodeExecutionTool uploads never reaching a fresh Anthropic container on a multi-turn history",
+      "criticality": "high",
+      "confounding_risk": "high",
+      "behavior_surfaces": ["anthropic", "uploads", "containers", "multi-turn-history"],
+      "protected_invariants": ["Fresh-container uploads remain available under multi-turn history semantics."],
+      "oracle": {
+        "paths": ["upstream regression patch in commit 56b99f74a961aa1409fb0e2c21a4159f74bda952"],
+        "tests": ["upstream Anthropic CodeExecutionTool multi-turn upload regression coverage"],
+        "source_url": "https://github.com/pydantic/pydantic-ai/commit/56b99f74a961aa1409fb0e2c21a4159f74bda952"
+      },
+      "discrimination_reason": "Behavior is highly relevant but the change spans roughly 27 commits / 22 files, creating unacceptable causal confounding for the primary frozen arm.",
+      "family_id": "pydantic-provider-container-history",
+      "notes": "Explicit HOLD-CONFOUNDING; never counted toward freeze target unless separately re-qualified before experiment start."
+    },
+    {
+      "case_id": "hold-adk-agenttool-litellm-two-fixes-5924",
+      "arm": "hold",
+      "eligibility": "hold",
+      "repo": "google/adk-python",
+      "source_kind": "upstream_commit",
+      "source_url": "https://github.com/google/adk-python/commit/550189ce4f3cc1e69a108b1f38ba6c31f2f40e65",
+      "pr_number": 5924,
+      "upstream_reference": "fixes #5926; addresses #773",
+      "base_sha": "93db97db338fa72cf5b4fef8125552f30e614b57",
+      "head_sha": "550189ce4f3cc1e69a108b1f38ba6c31f2f40e65",
+      "candidate_repo": null,
+      "title": "wrap input_schema payload in ReAct prompt and propagate tool_choice to LiteLLM",
+      "criticality": "high",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["agent-tool", "react", "litellm", "tool-choice"],
+      "protected_invariants": [
+        "Nested AgentTool structured input does not suppress required tool use.",
+        "FunctionCallingConfig mode reaches LiteLLM tool_choice semantics."
+      ],
+      "oracle": {
+        "paths": ["tests/unittests/tools/test_agent_tool.py", "tests/unittests/models/test_litellm.py"],
+        "tests": ["3 AgentTool input-schema tests", "8 LiteLLM tool_choice propagation tests"],
+        "source_url": "https://github.com/google/adk-python/commit/550189ce4f3cc1e69a108b1f38ba6c31f2f40e65"
+      },
+      "discrimination_reason": "Technically useful but contains two separable behavioral fixes in one commit. Replaced in the primary 20 by the single-invariant GKE sandbox credential case.",
+      "family_id": "adk-tool-routing",
+      "notes": "Hold, not counted."
+    },
+    {
+      "case_id": "prospective-langgraph-exit-durability-cancel-8634",
+      "arm": "prospective",
+      "eligibility": "hold",
+      "repo": "langchain-ai/langgraph",
+      "source_kind": "pull_request",
+      "source_url": "https://github.com/langchain-ai/langgraph/pull/8634",
+      "pr_number": 8634,
+      "upstream_reference": "issue #5672",
+      "base_sha": null,
+      "head_sha": null,
+      "candidate_repo": null,
+      "title": "persist cancellation record under durability='exit'",
+      "criticality": "high",
+      "confounding_risk": "medium",
+      "behavior_surfaces": ["durability", "cancellation", "checkpointing"],
+      "protected_invariants": ["Cancellation state requested under exit durability is durably represented according to the intended checkpoint contract."],
+      "oracle": {
+        "paths": ["PR #8634 regression patch"],
+        "tests": ["prospective cancellation/durability regression oracle"],
+        "source_url": "https://github.com/langchain-ai/langgraph/pull/8634"
+      },
+      "discrimination_reason": "Behavior is promising but the PR was not merged when preregistered. It may be used only in a separately labeled prospective arm and cannot count as historical evidence.",
+      "family_id": "langgraph-durability-cancellation",
+      "notes": "Synthetic merge_commit_sha is not accepted as merge proof; merged_at was null at qualification time."
+    }
+  ]
+}

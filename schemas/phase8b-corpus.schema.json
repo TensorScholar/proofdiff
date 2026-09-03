@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TensorScholar/proofdiff/schemas/phase8b-corpus.schema.json",
+  "title": "ProofDiff Phase 8B Preregistered Corpus",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "phase",
+    "corpus_status",
+    "experiment_status",
+    "created_at",
+    "source_of_truth_issue",
+    "targets",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "phase": {"const": "8B"},
+    "corpus_status": {"enum": ["draft", "frozen", "amended"]},
+    "experiment_status": {
+      "enum": ["preregistering", "ready", "running", "complete", "amended"]
+    },
+    "created_at": {"type": "string", "format": "date"},
+    "frozen_at": {"type": ["string", "null"], "format": "date-time"},
+    "source_of_truth_issue": {"type": "string", "format": "uri"},
+    "targets": {
+      "type": "object",
+      "required": ["new_historical_cases", "minimum_repositories", "control_cases"],
+      "properties": {
+        "new_historical_cases": {"type": "integer", "minimum": 20},
+        "minimum_repositories": {"type": "integer", "minimum": 5},
+        "control_cases": {"type": "integer", "minimum": 3}
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 23,
+      "items": {"$ref": "#/$defs/case"}
+    }
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "nullableSha": {
+      "anyOf": [{"$ref": "#/$defs/sha"}, {"type": "null"}]
+    },
+    "nonEmptyUniqueStrings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 512}
+    },
+    "oracle": {
+      "type": "object",
+      "required": ["paths", "tests", "source_url"],
+      "properties": {
+        "paths": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "tests": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "source_url": {"type": "string", "format": "uri"},
+        "notes": {"type": "string", "maxLength": 4000}
+      },
+      "additionalProperties": false
+    },
+    "case": {
+      "type": "object",
+      "required": [
+        "case_id",
+        "arm",
+        "eligibility",
+        "repo",
+        "source_kind",
+        "source_url",
+        "base_sha",
+        "head_sha",
+        "title",
+        "criticality",
+        "confounding_risk",
+        "behavior_surfaces",
+        "protected_invariants",
+        "oracle",
+        "discrimination_reason"
+      ],
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$"
+        },
+        "arm": {
+          "enum": ["historical", "control", "prospective", "hold", "rejected"]
+        },
+        "eligibility": {"enum": ["qualified", "control", "hold", "rejected"]},
+        "repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "source_kind": {
+          "enum": ["upstream_commit", "frozen_pair", "pull_request"]
+        },
+        "source_url": {"type": "string", "format": "uri"},
+        "pr_number": {"type": ["integer", "null"], "minimum": 1},
+        "upstream_reference": {"type": ["string", "null"], "maxLength": 512},
+        "base_sha": {"$ref": "#/$defs/nullableSha"},
+        "head_sha": {"$ref": "#/$defs/nullableSha"},
+        "candidate_repo": {
+          "type": ["string", "null"],
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "title": {"type": "string", "minLength": 1, "maxLength": 512},
+        "criticality": {"enum": ["low", "medium", "high", "critical"]},
+        "confounding_risk": {"enum": ["low", "medium", "high"]},
+        "behavior_surfaces": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "protected_invariants": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "oracle": {"$ref": "#/$defs/oracle"},
+        "discrimination_reason": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "family_id": {"type": ["string", "null"], "maxLength": 128},
+        "notes": {"type": "string", "maxLength": 4000}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
