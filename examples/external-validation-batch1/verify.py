@@ -50,6 +50,27 @@ EXPECTED_OBSERVATIONS: dict[str, dict[str, dict[str, bool]]] = {
     },
 }
 
+# These expectations encode the already-released v0.1.0 policy semantics, not
+# corpus-specific policy tuning. In particular, a fixed high-risk tool-schema
+# behavior can still require human REVIEW because the capability itself changed.
+EXPECTED_DECISIONS: dict[str, dict[str, str]] = {
+    "openai-agents-chained-ref": {
+        "repair": "REVIEW",
+        "regression": "REVIEW",
+        "full": "REVIEW",
+    },
+    "copilotkit-subgraph-context": {
+        "repair": "PASS",
+        "regression": "REVIEW",
+        "full": "PASS",
+    },
+    "langgraph-interrupt-wrapper": {
+        "repair": "PASS",
+        "regression": "BLOCK",
+        "full": "PASS",
+    },
+}
+
 
 def _load_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8"))
@@ -153,13 +174,13 @@ def _verify_targeted(
     }
 
 
-def _verify_full(evidence: Path, protected: list[str]) -> dict[str, Any]:
+def _verify_full(evidence: Path, protected: list[str], *, expected_decision: str) -> dict[str, Any]:
     selection = _load_json(evidence / "selection.json")
     assert selection["selected_contracts"] == selection["total_contracts"], selection
     assert set(protected).issubset(set(selection["selected_ids"])), selection
     assert selection["fallback_applied"] is False, selection
     decision = _load_json(evidence / "decision.json")
-    assert decision["status"] == "PASS", decision
+    assert decision["status"] == expected_decision, decision
     return {
         "decision": decision["status"],
         "selected_contracts": selection["selected_contracts"],
@@ -185,22 +206,22 @@ def main() -> int:
     _verify_observation(args.case, "base", base)
     _verify_observation(args.case, "candidate", candidate)
 
-    reverse_decision = "BLOCK" if case["risk"] == "critical" else "REVIEW"
+    expected_decisions = EXPECTED_DECISIONS[args.case]
     repair = _verify_targeted(
         args.repair_evidence,
         protected,
-        expected_decision="PASS",
+        expected_decision=expected_decisions["repair"],
         expected_comparison="fixed",
         expected_candidate_status="pass",
     )
     regression = _verify_targeted(
         args.regression_evidence,
         protected,
-        expected_decision=reverse_decision,
+        expected_decision=expected_decisions["regression"],
         expected_comparison="new_regression",
         expected_candidate_status="fail",
     )
-    full = _verify_full(args.full_evidence, protected)
+    full = _verify_full(args.full_evidence, protected, expected_decision=expected_decisions["full"])
 
     static_ids = sorted(case["static_tag_baseline_contracts"])
     static_count = len(static_ids)
