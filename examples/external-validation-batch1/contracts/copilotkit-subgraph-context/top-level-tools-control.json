@@ -1,0 +1,20 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "TOOL_DESCRIPTION_CHANGED"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:top_level.frontend_tools_propagate"
+    ]
+  },
+  "id": "top_level.frontend_tools_propagate",
+  "risk": "medium",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Top-level frontend-tool propagation remains intact"
+}
