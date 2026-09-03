@@ -58,6 +58,7 @@ ALLOWED_DOC_ENTRIES = frozenset(
         "benchmark-card.md",
         "evidence-model.md",
         "limitations.md",
+        "phase-8b-preregistration.md",
         "threat-model.md",
     }
 )
