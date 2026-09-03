@@ -23,11 +23,7 @@ def _chained_ref_observation() -> tuple[bool, dict]:
     }
     result = ensure_strict_json_schema(schema)
     observed = result["properties"]["a"]
-    preserved = (
-        observed.get("type") == "string"
-        and observed.get("description") == "desc"
-        and "$ref" not in observed
-    )
+    preserved = observed.get("type") == "string" and observed.get("description") == "desc" and "$ref" not in observed
     return preserved, result
 
 
@@ -44,11 +40,7 @@ def _direct_ref_preserved() -> bool:
     }
     result = ensure_strict_json_schema(schema)
     observed = result["properties"]["a"]
-    return (
-        observed.get("type") == "string"
-        and observed.get("description") == "desc"
-        and "$ref" not in observed
-    )
+    return observed.get("type") == "string" and observed.get("description") == "desc" and "$ref" not in observed
 
 
 def _invalid_ref_rejected() -> bool:
