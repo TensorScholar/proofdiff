@@ -50,11 +50,7 @@ def _observation(capture: dict[str, Any], expected_revision: str) -> dict[str, A
     first = runs[0]
     if not isinstance(first, dict):
         raise ValueError("capture observation must be an object")
-    return {
-        key: value
-        for key, value in first.items()
-        if key not in {"process_exit_code", "stderr_tail"}
-    }
+    return {key: value for key, value in first.items() if key not in {"process_exit_code", "stderr_tail"}}
 
 
 def _common_manifest(case: dict[str, Any], commit: str) -> dict[str, Any]:
@@ -86,7 +82,9 @@ def _trace(contract_id: str, passed: bool, *, metadata: dict[str, Any] | None = 
     }
 
 
-def _openai(case: dict[str, Any], commit: str, observation: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _openai(
+    case: dict[str, Any], commit: str, observation: dict[str, Any]
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     manifest = _common_manifest(case, commit)
     strict_schema = observation.get("strict_schema")
     if not isinstance(strict_schema, dict):
@@ -109,7 +107,9 @@ def _openai(case: dict[str, Any], commit: str, observation: dict[str, Any]) -> t
     return manifest, traces
 
 
-def _copilotkit(case: dict[str, Any], commit: str, observation: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _copilotkit(
+    case: dict[str, Any], commit: str, observation: dict[str, Any]
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     manifest = _common_manifest(case, commit)
     top = observation.get("top_level")
     sub = observation.get("subgraph")
@@ -136,7 +136,9 @@ def _copilotkit(case: dict[str, Any], commit: str, observation: dict[str, Any]) 
     return manifest, traces
 
 
-def _langgraph(case: dict[str, Any], commit: str, observation: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _langgraph(
+    case: dict[str, Any], commit: str, observation: dict[str, Any]
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     manifest = _common_manifest(case, commit)
     manifest["tools"] = [
         {
