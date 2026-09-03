@@ -34,6 +34,7 @@ jobs:
       - run: coverage run --branch -m pytest -q
       - run: coverage report -m
       - run: python scripts/check_schemas.py
+      - run: python benchmarks/phase8b/validate_corpus.py --require-freeze-ready
       - run: python scripts/check_architecture.py
       - run: python scripts/security_scan.py
       - name: Set canonical build timestamp
