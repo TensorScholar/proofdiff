@@ -86,6 +86,17 @@ def capture(python: Path, probe: Path, revision: str, runs: int) -> dict[str, An
     }
 
 
+def _capture_is_valid(result: dict[str, Any]) -> bool:
+    summary = result.get("summary")
+    if not isinstance(summary, dict):
+        return False
+    return (
+        summary.get("probe_error_runs") == 0
+        and summary.get("nonzero_exit_runs") == 0
+        and summary.get("stable") is True
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture an external ProofDiff validation probe.")
     parser.add_argument("--python", type=Path, required=True)
@@ -101,6 +112,13 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result["summary"], sort_keys=True))
+
+    # Always persist the raw evidence first, then fail closed. This prevents a
+    # deterministic environment/protocol failure from being mistaken for a
+    # successful behavioral capture and defers no error to the translation step.
+    if not _capture_is_valid(result):
+        print(f"invalid external capture written to {args.output}")
+        return 2
     return 0
 
 
