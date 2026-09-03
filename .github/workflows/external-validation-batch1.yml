@@ -30,7 +30,9 @@ jobs:
             candidate_sha: f32f613a7f502af445405d7ef55aae75a276f835
             probe: openai_agents_probe.py
             env_kind: uv-root
+            repair_exit: 1
             reverse_exit: 1
+            full_exit: 1
           - case: copilotkit-subgraph-context
             base_repo: CopilotKit/CopilotKit
             candidate_repo: CopilotKit/CopilotKit
@@ -38,15 +40,19 @@ jobs:
             candidate_sha: e9148b305025620e9f43c4eb3e597e5b9bcef419
             probe: copilotkit_probe.py
             env_kind: poetry-sdk
+            repair_exit: 0
             reverse_exit: 1
+            full_exit: 0
           - case: langgraph-interrupt-wrapper
             base_repo: langchain-ai/langgraph
             candidate_repo: devansh-dek/langgraph
             base_sha: 5931a5f0b313feff24e2516a586c55601b868ac1
             candidate_sha: 4680a4e94fb503ec321ca6c0a1b0af36db8dd9e1
             probe: langgraph_probe.py
-            env_kind: uv-prebuilt
+            env_kind: uv-langgraph-overlay
+            repair_exit: 0
             reverse_exit: 2
+            full_exit: 0
     env:
       PILOT_ROOT: examples/external-validation-batch1
       OUT_ROOT: .proofdiff/pilots/external-validation-batch1
@@ -117,11 +123,23 @@ jobs:
               echo "BASE_PYTHON=$PWD/.pilot/base/sdk-python/.venv/bin/python" >> "$GITHUB_ENV"
               echo "CANDIDATE_PYTHON=$PWD/.pilot/candidate/sdk-python/.venv/bin/python" >> "$GITHUB_ENV"
               ;;
-            uv-prebuilt)
-              (cd .pilot/base/libs/prebuilt && uv sync --frozen --no-dev)
-              (cd .pilot/candidate/libs/prebuilt && uv sync --frozen --no-dev)
-              echo "BASE_PYTHON=$PWD/.pilot/base/libs/prebuilt/.venv/bin/python" >> "$GITHUB_ENV"
-              echo "CANDIDATE_PYTHON=$PWD/.pilot/candidate/libs/prebuilt/.venv/bin/python" >> "$GITHUB_ENV"
+            uv-langgraph-overlay)
+              # Resolve the frozen main LangGraph runtime from each revision's committed lockfile.
+              # The changed `prebuilt` package is then supplied directly from the same immutable
+              # checkout via PYTHONPATH, avoiding dependency re-resolution while ensuring the
+              # probe imports the exact baseline/candidate ToolNode implementation.
+              (cd .pilot/base/libs/langgraph && uv sync --frozen --no-dev)
+              (cd .pilot/candidate/libs/langgraph && uv sync --frozen --no-dev)
+              BASE_PY="$PWD/.pilot/base/libs/langgraph/.venv/bin/python"
+              CANDIDATE_PY="$PWD/.pilot/candidate/libs/langgraph/.venv/bin/python"
+              BASE_OVERLAY="$PWD/.pilot/base/libs/prebuilt"
+              CANDIDATE_OVERLAY="$PWD/.pilot/candidate/libs/prebuilt"
+              PYTHONPATH="$BASE_OVERLAY" "$BASE_PY" -c 'import inspect; import langgraph.errors; import langgraph.prebuilt.tool_node as m; print(inspect.getfile(m))'
+              PYTHONPATH="$CANDIDATE_OVERLAY" "$CANDIDATE_PY" -c 'import inspect; import langgraph.errors; import langgraph.prebuilt.tool_node as m; print(inspect.getfile(m))'
+              echo "BASE_PYTHON=$BASE_PY" >> "$GITHUB_ENV"
+              echo "CANDIDATE_PYTHON=$CANDIDATE_PY" >> "$GITHUB_ENV"
+              echo "BASE_PYTHONPATH=$BASE_OVERLAY" >> "$GITHUB_ENV"
+              echo "CANDIDATE_PYTHONPATH=$CANDIDATE_OVERLAY" >> "$GITHUB_ENV"
               ;;
             *)
               echo "unknown environment kind: ${{ matrix.env_kind }}" >&2
@@ -134,14 +152,26 @@ jobs:
         run: |
           CASE_OUT="$OUT_ROOT/${{ matrix.case }}"
           mkdir -p "$CASE_OUT/raw"
+
+          base_extra=()
+          candidate_extra=()
+          if [[ -n "${BASE_PYTHONPATH:-}" ]]; then
+            base_extra+=(--pythonpath "$BASE_PYTHONPATH")
+          fi
+          if [[ -n "${CANDIDATE_PYTHONPATH:-}" ]]; then
+            candidate_extra+=(--pythonpath "$CANDIDATE_PYTHONPATH")
+          fi
+
           python "$PILOT_ROOT/capture.py" \
             --python "$BASE_PYTHON" \
+            "${base_extra[@]}" \
             --probe "$PILOT_ROOT/${{ matrix.probe }}" \
             --revision "${{ matrix.base_sha }}" \
             --runs 3 \
             --output "$CASE_OUT/raw/base-capture.json"
           python "$PILOT_ROOT/capture.py" \
             --python "$CANDIDATE_PYTHON" \
+            "${candidate_extra[@]}" \
             --probe "$PILOT_ROOT/${{ matrix.probe }}" \
             --revision "${{ matrix.candidate_sha }}" \
             --runs 3 \
@@ -174,7 +204,7 @@ jobs:
             --evidence "$CASE_OUT/evidence/repair"
           code=$?
           set -e
-          test "$code" -eq 0
+          test "$code" -eq "${{ matrix.repair_exit }}"
           proofdiff verify --evidence "$CASE_OUT/evidence/repair"
 
       - name: Run counterfactual regression
@@ -210,7 +240,7 @@ jobs:
             --evidence "$CASE_OUT/evidence/full-suite"
           code=$?
           set -e
-          test "$code" -eq 0
+          test "$code" -eq "${{ matrix.full_exit }}"
           proofdiff verify --evidence "$CASE_OUT/evidence/full-suite"
 
       - name: Verify preregistered case outcome
