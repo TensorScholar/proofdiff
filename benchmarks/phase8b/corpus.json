@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "phase": "8B",
-  "corpus_status": "frozen",
+  "corpus_status": "amended",
   "experiment_status": "preregistering",
   "created_at": "2026-09-03",
   "frozen_at": "2026-09-03T12:09:43Z",
@@ -131,18 +131,18 @@
         "Cleanup errors do not replace the original stream failure."
       ],
       "oracle": {
-        "paths": ["tests/ui/test_event_stream.py"],
+        "paths": ["tests/test_ui.py"],
         "tests": [
           "test_cancelled_part_end_contains_accumulated_part",
           "test_part_end_delta_matches_handler_output_on_error",
           "test_part_cleanup_error_does_not_replace_stream_error"
         ],
         "source_url": "https://github.com/pydantic/pydantic-ai/commit/897d40cd17f8b84c0e99fe5d38e7c763c3110216",
-        "notes": "Upstream commit carries parametrized text, thinking, function-tool and native-tool cases."
+        "notes": "Upstream commit carries parametrized text, thinking, function-tool and native-tool cases. Amendment A1 corrected the oracle path from nonexistent tests/ui/test_event_stream.py to canonical tests/test_ui.py; test names and protected behavior were unchanged."
       },
       "discrimination_reason": "The invariant depends on temporal correspondence between emitted deltas and synthetic cleanup state, not merely the UIEventStream component membership.",
       "family_id": "pydantic-stream-tool-lifecycle",
-      "notes": "Same broad stream family as #7925; family-aware analysis prevents overweighting correlated cases."
+      "notes": "Same broad stream family as #7925; family-aware analysis prevents overweighting correlated cases. Amendment A1 is recorded on issue #18 comment 5525636969 and was made before Gate B baseline freeze or any BIG execution."
     },
     {
       "case_id": "pydantic-cohere-zero-arg-tool-7720",
