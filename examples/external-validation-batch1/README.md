@@ -28,13 +28,18 @@ Each CI case follows the same evidence pipeline:
 2. Install each revision in an isolated environment using the target project's committed lockfile
    when available.
 3. Run an independent deterministic probe three times against each revision.
-4. Refuse translation when probe execution errors, exits non-zero, or produces unstable observations.
-5. Translate captured observations into ProofDiff manifests and fixture traces.
+4. Persist raw evidence and fail closed if a probe errors, exits non-zero, or produces unstable
+   observations.
+5. Translate successful captures into ProofDiff manifests and fixture traces.
 6. Run ProofDiff v0.1.0 unchanged in the repair direction.
 7. Run the reverse direction as a counterfactual regression.
 8. Run an all-contract full-suite baseline.
 9. Verify every evidence bundle and write a machine-readable case result.
 10. Upload raw captures, translated inputs, evidence bundles, and results as CI artifacts.
+
+The LangGraph environment resolves the frozen main `langgraph` runtime from the revision lockfile and
+supplies the exact same-revision `libs/prebuilt` source through `PYTHONPATH`. This avoids dependency
+re-resolution while executing the frozen ToolNode implementation under test.
 
 The probes execute target behavior; they do not write the expected outcome directly into ProofDiff
 traces. `prepare.py` only translates observed booleans/data into fixture records after capture.
@@ -51,6 +56,54 @@ For every case we compare:
 Batch 1 is a micro-suite. Contract-count reduction here is validation evidence only; it is not a
 claim about customer ROI, production recall, safety, or dollars saved. A tie with the static baseline
 is a valid null result and must be reported as such.
+
+## First execution and post-observation repair
+
+The first CI execution exposed two validation-harness defects, both preserved on issue #15 before
+repair:
+
+- the OpenAI case expected `PASS`, although the released v0.1.0 policy correctly returns `REVIEW`
+  for a high-risk capability/tool-schema change even when the protected behavior is fixed;
+- the initial LangGraph environment omitted the main `langgraph` package, and the capture wrapper did
+  not immediately fail when all probe runs reported import errors.
+
+Post-observation changes were restricted to validation infrastructure: fail-closed capture, the
+correct frozen LangGraph runtime/source overlay, and expected exit codes matching the already
+released policy. ProofDiff selector/evaluator/decision core, registered external revisions, and
+protected contracts were not tuned to make the batch pass.
+
+## Corrected Batch 1 result
+
+| Case | Oracle | Targeted | Full | Static | Forward | Reverse | Protected omissions | False-safe |
+|---|---:|---:|---:|---:|---|---|---:|---:|
+| OpenAI Agents | 3/3 per revision | 1/3 | 3/3 | 1 | `REVIEW / fixed` | `REVIEW / new_regression` | 0 | 0 |
+| CopilotKit | 3/3 per revision | 2/4 | 4/4 | 2 | `PASS / fixed` | `REVIEW / new_regression` | 0 | 0 |
+| LangGraph | 3/3 per revision | 2/4 | 4/4 | 2 | `PASS / fixed` | `BLOCK / new_regression` | 0 | 0 |
+
+### Supported by Batch 1
+
+- all three frozen external behavioral oracles reproduced deterministically;
+- no registered protected behavior was omitted;
+- no registered false-safe decision was observed;
+- the critical LangGraph reverse regression was blocked;
+- evidence bundles verify and preserve deterministic forward/reverse classification;
+- targeted execution avoids micro-suite work relative to the full declared suites.
+
+### Not supported by Batch 1
+
+ProofDiff did **not** beat the preregistered static tag/component baseline on selected-contract count
+in any case:
+
+- OpenAI: `1 = 1`;
+- CopilotKit: `2 = 2`;
+- LangGraph: `2 = 2`.
+
+Therefore Batch 1 does not support claims that current v0.1.0 selection is superior to static
+mapping, reduces mapping maintenance, reduces reviewer effort, provides production-scale recall,
+creates customer ROI, or demonstrates willingness to pay.
+
+The full-suite reductions are validation-only micro-suite measurements and must not be presented as
+economic savings.
 
 ## Anti-gaming rules
 
@@ -73,9 +126,14 @@ is a valid null result and must be reported as such.
 - `policy.json` — conservative release policy.
 - `verify.py` — preregistered oracle, selection, decision, and baseline assertions.
 
-## Interpretation
+## Product decision
 
-A successful CI run means only that the frozen oracle was reproduced and the preregistered
-ProofDiff assertions held for that case. Phase 8 still requires a larger external corpus, adoption
-friction measurement, and real design-partner/commercial evidence before a v0.2 product thesis is
-accepted.
+Batch 1 is a positive narrow conservative-assurance result and a **null differentiation result**.
+
+The next falsification phase is issue #18: determine whether a calibrated, provenance-backed
+Behavior Impact Graph can reduce mapping/evaluation burden versus static mappings while preserving
+conservative behavior and producing explicit justification for both selected and skipped contracts.
+
+If that experiment cannot beat static mapping on meaningful operational economics without
+sacrificing assurance, ProofDiff should stop treating impact selection as the primary moat and
+evaluate evidence-governed AI release assurance as the narrower product wedge.
