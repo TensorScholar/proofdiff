@@ -119,28 +119,19 @@ def _integrity_errors(
             if isinstance(repo, str):
                 historical_repos.add(repo)
             if source_kind != "upstream_commit":
-                errors.append(
-                    f"{case_id}: qualified historical case must use "
-                    "source_kind=upstream_commit"
-                )
+                errors.append(f"{case_id}: qualified historical case must use source_kind=upstream_commit")
             for label, sha in (("base_sha", base_sha), ("head_sha", head_sha)):
                 if not isinstance(sha, str) or SHA_RE.fullmatch(sha) is None:
-                    errors.append(
-                        f"{case_id}: qualified historical {label} must be a 40-hex SHA"
-                    )
+                    errors.append(f"{case_id}: qualified historical {label} must be a 40-hex SHA")
             if isinstance(base_sha, str) and isinstance(head_sha, str):
                 if base_sha == head_sha:
                     errors.append(f"{case_id}: base_sha and head_sha must differ")
                 pair = (repo if isinstance(repo, str) else "", head_sha)
                 if pair in revision_pairs:
-                    errors.append(
-                        f"{case_id}: duplicate qualified historical repo/head pair {pair}"
-                    )
+                    errors.append(f"{case_id}: duplicate qualified historical repo/head pair {pair}")
                 revision_pairs.add(pair)
                 if isinstance(source_url, str) and head_sha not in source_url:
-                    errors.append(
-                        f"{case_id}: source_url must pin the qualified historical head_sha"
-                    )
+                    errors.append(f"{case_id}: source_url must pin the qualified historical head_sha")
 
         if arm == "control":
             controls += 1
@@ -156,20 +147,11 @@ def _integrity_errors(
 
     for path, key in _walk_keys(corpus):
         if key in FORBIDDEN_OBSERVATION_KEYS:
-            errors.append(
-                "post-observation field is forbidden before experiment execution: "
-                f"{path}"
-            )
+            errors.append(f"post-observation field is forbidden before experiment execution: {path}")
 
-    qualified_ids = {
-        case.get("case_id")
-        for case in cases
-        if isinstance(case, dict) and _qualified_historical(case)
-    }
+    qualified_ids = {case.get("case_id") for case in cases if isinstance(case, dict) and _qualified_historical(case)}
     for family_id, members in sorted(family_members.items()):
-        qualified_members = [
-            case_id for case_id in members if case_id in qualified_ids
-        ]
+        qualified_members = [case_id for case_id in members if case_id in qualified_ids]
         if len(qualified_members) > 2:
             warnings.append(
                 f"correlated family {family_id!r} has {len(qualified_members)} "
@@ -178,12 +160,8 @@ def _integrity_errors(
             )
 
     targets = corpus.get("targets", {})
-    target_historical = (
-        targets.get("new_historical_cases") if isinstance(targets, dict) else None
-    )
-    target_repos = (
-        targets.get("minimum_repositories") if isinstance(targets, dict) else None
-    )
+    target_historical = targets.get("new_historical_cases") if isinstance(targets, dict) else None
+    target_repos = targets.get("minimum_repositories") if isinstance(targets, dict) else None
     target_controls = targets.get("control_cases") if isinstance(targets, dict) else None
 
     strict = require_freeze_ready or corpus.get("corpus_status") in {
@@ -193,18 +171,12 @@ def _integrity_errors(
     if strict:
         if not isinstance(target_historical, int) or qualified_historical < target_historical:
             errors.append(
-                f"freeze gate: {qualified_historical} qualified new historical cases; "
-                f"target is {target_historical}"
+                f"freeze gate: {qualified_historical} qualified new historical cases; target is {target_historical}"
             )
         if not isinstance(target_repos, int) or len(historical_repos) < target_repos:
-            errors.append(
-                f"freeze gate: {len(historical_repos)} historical repositories; "
-                f"target is {target_repos}"
-            )
+            errors.append(f"freeze gate: {len(historical_repos)} historical repositories; target is {target_repos}")
         if not isinstance(target_controls, int) or controls < target_controls:
-            errors.append(
-                f"freeze gate: {controls} controls; target is {target_controls}"
-            )
+            errors.append(f"freeze gate: {controls} controls; target is {target_controls}")
 
     status = corpus.get("corpus_status")
     frozen_at = corpus.get("frozen_at")
@@ -217,18 +189,12 @@ def _integrity_errors(
 
 
 def _summary(corpus: dict[str, Any]) -> str:
-    cases = [
-        case for case in corpus.get("cases", []) if isinstance(case, dict)
-    ]
+    cases = [case for case in corpus.get("cases", []) if isinstance(case, dict)]
     arm_counts = Counter(str(case.get("arm")) for case in cases)
     qualified = [case for case in cases if _qualified_historical(case)]
     repo_counts = Counter(str(case.get("repo")) for case in qualified)
-    arms = ", ".join(
-        f"{key}:{value}" for key, value in sorted(arm_counts.items())
-    )
-    repositories = ", ".join(
-        f"{key}:{value}" for key, value in sorted(repo_counts.items())
-    )
+    arms = ", ".join(f"{key}:{value}" for key, value in sorted(arm_counts.items()))
+    repositories = ", ".join(f"{key}:{value}" for key, value in sorted(repo_counts.items()))
     return "\n".join(
         [
             f"corpus_status={corpus.get('corpus_status')}",
@@ -241,16 +207,11 @@ def _summary(corpus: dict[str, Any]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Validate the frozen/draft Phase 8B external corpus."
-    )
+    parser = argparse.ArgumentParser(description="Validate the frozen/draft Phase 8B external corpus.")
     parser.add_argument(
         "--require-freeze-ready",
         action="store_true",
-        help=(
-            "Enforce the numerical/diversity freeze gates even while "
-            "corpus_status is draft."
-        ),
+        help=("Enforce the numerical/diversity freeze gates even while corpus_status is draft."),
     )
     args = parser.parse_args()
 
