@@ -107,11 +107,7 @@ def _capture(path: Path, revision: str) -> dict[str, Any]:
     assert summary["nonzero_exit_runs"] == 0, summary
     assert summary["stable"] is True, summary
     first = capture["runs"][0]
-    return {
-        key: value
-        for key, value in first.items()
-        if key not in {"process_exit_code", "stderr_tail"}
-    }
+    return {key: value for key, value in first.items() if key not in {"process_exit_code", "stderr_tail"}}
 
 
 def _path_get(value: dict[str, Any], path: str) -> Any:
