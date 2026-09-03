@@ -1,0 +1,35 @@
+name: Phase 8B formatter once
+
+on:
+  push:
+    branches: [phase-8b-preregistration]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: phase-8b-preregistration
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install 'ruff==0.16.5'
+      - run: ruff format benchmarks/phase8b/validate_corpus.py
+      - name: Commit canonical formatter output if needed
+        shell: bash
+        run: |
+          if git diff --quiet -- benchmarks/phase8b/validate_corpus.py; then
+            echo 'Validator is already canonical.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add benchmarks/phase8b/validate_corpus.py
+          git commit -m 'style: apply canonical Ruff formatting'
+          git push origin HEAD:phase-8b-preregistration
