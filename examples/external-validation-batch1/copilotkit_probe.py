@@ -70,21 +70,13 @@ async def _consume(agent: LangGraphAGUIAgent, run_id: str) -> None:
 
 def _observed(model: RecordingToolAwareChatModel) -> dict[str, Any]:
     tool_names = [
-        item.get("name")
-        for item in model.bound_tools
-        if isinstance(item, dict) and isinstance(item.get("name"), str)
+        item.get("name") for item in model.bound_tools if isinstance(item, dict) and isinstance(item.get("name"), str)
     ]
-    system_contents = [
-        str(message.content)
-        for message in model.last_messages
-        if isinstance(message, SystemMessage)
-    ]
+    system_contents = [str(message.content) for message in model.last_messages if isinstance(message, SystemMessage)]
     return {
         "tool_names": tool_names,
         "frontend_tool_present": "frontend_lookup" in tool_names,
-        "app_context_present": any(
-            "App Context:" in content and "admin" in content for content in system_contents
-        ),
+        "app_context_present": any("App Context:" in content and "admin" in content for content in system_contents),
         "model_invoked": bool(model.last_messages),
     }
 
