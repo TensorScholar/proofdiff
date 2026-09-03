@@ -10,7 +10,7 @@ from typing import Any
 PREFIX = "PROOFDIFF_PROBE="
 
 
-def _run_once(python: Path, probe: Path) -> dict[str, Any]:
+def _run_once(python: Path, probe: Path, pythonpath: Path | None = None) -> dict[str, Any]:
     env = os.environ.copy()
     env.update(
         {
@@ -20,6 +20,9 @@ def _run_once(python: Path, probe: Path) -> dict[str, Any]:
             "PYTHONUNBUFFERED": "1",
         }
     )
+    if pythonpath is not None:
+        existing = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = str(pythonpath) if not existing else f"{pythonpath}{os.pathsep}{existing}"
     try:
         completed = subprocess.run(
             [str(python), str(probe)],
@@ -70,8 +73,14 @@ def _normalized_observation(value: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def capture(python: Path, probe: Path, revision: str, runs: int) -> dict[str, Any]:
-    observations = [_run_once(python, probe) for _ in range(runs)]
+def capture(
+    python: Path,
+    probe: Path,
+    revision: str,
+    runs: int,
+    pythonpath: Path | None = None,
+) -> dict[str, Any]:
+    observations = [_run_once(python, probe, pythonpath) for _ in range(runs)]
     normalized = [_normalized_observation(item) for item in observations]
     return {
         "schema_version": "1",
@@ -100,6 +109,7 @@ def _capture_is_valid(result: dict[str, Any]) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Capture an external ProofDiff validation probe.")
     parser.add_argument("--python", type=Path, required=True)
+    parser.add_argument("--pythonpath", type=Path)
     parser.add_argument("--probe", type=Path, required=True)
     parser.add_argument("--revision", required=True)
     parser.add_argument("--runs", type=int, default=3)
@@ -108,7 +118,13 @@ def main() -> int:
     if args.runs <= 0 or args.runs > 20:
         raise SystemExit("--runs must be between 1 and 20")
 
-    result = capture(args.python.absolute(), args.probe.resolve(), args.revision, args.runs)
+    result = capture(
+        args.python.absolute(),
+        args.probe.resolve(),
+        args.revision,
+        args.runs,
+        args.pythonpath.resolve() if args.pythonpath is not None else None,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps(result["summary"], sort_keys=True))
