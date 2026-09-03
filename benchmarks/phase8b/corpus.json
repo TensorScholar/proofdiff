@@ -65,7 +65,7 @@
         "Interrupted history synthesizes missing tool returns and can resume with or without a new prompt."
       ],
       "oracle": {
-        "paths": ["tests/test_agent.py", "tests/test_cancellation.py"],
+        "paths": ["tests/test_agent.py", "tests/test_run_cancellation.py"],
         "tests": [
           "test_failed_run_history_is_resumable",
           "test_cancel_during_only_tool_call_is_resumable",
@@ -292,7 +292,7 @@
         "A confirmed single-turn tool request does not enter an infinite confirmation loop."
       ],
       "oracle": {
-        "paths": ["upstream regression patch in commit e753651b7df26febe00bde2cb043225e644cd207"],
+        "paths": ["tests/unittests/workflow/test_llm_agent_as_node.py"],
         "tests": ["test_single_turn_input_skipped_when_resuming"],
         "source_url": "https://github.com/google/adk-python/commit/e753651b7df26febe00bde2cb043225e644cd207"
       },
@@ -500,7 +500,7 @@
         "A failed underlying Session mutation invalidates stale compaction cache state."
       ],
       "oracle": {
-        "paths": ["upstream regression patch in commit 40f0d9fccbe03bf704e4ef044c7c81b807e594da"],
+        "paths": ["tests/test_run_impl_resume_paths.py", "tests/test_agent_runner_streamed.py"],
         "tests": ["resumed Session write recovery, ambiguity rejection, serialization and streamed/non-streamed regression cases"],
         "source_url": "https://github.com/openai/openai-agents-python/commit/40f0d9fccbe03bf704e4ef044c7c81b807e594da"
       },
@@ -529,7 +529,7 @@
         "The same configuration object can be reused with identical semantics."
       ],
       "oracle": {
-        "paths": ["upstream memory regression tests in commit 98799a3b094e66293662d08fc45a6d62d2909c34"],
+        "paths": ["lib/crewai/tests/memory/test_unified_memory.py"],
         "tests": [
           "test_memory_scope_config_can_be_reused",
           "test_memory_slice_config_can_be_reused_without_normalizing_it_in_place",
@@ -563,7 +563,7 @@
         "An unspecified collapse LLM resolves through project model configuration instead of a hard-coded provider."
       ],
       "oracle": {
-        "paths": ["upstream flow human-feedback regression tests in commit 8e462056196349b3134ad7adcb5f354058332645"],
+        "paths": ["lib/crewai/tests/test_async_human_feedback.py", "lib/crewai/tests/test_human_feedback_decorator.py"],
         "tests": ["test_json_without_outcome_raises", "human-feedback collapse matching/failure regression suite"],
         "source_url": "https://github.com/crewAIInc/crewAI/commit/8e462056196349b3134ad7adcb5f354058332645"
       },
@@ -592,7 +592,7 @@
         "Built-in converse does not double-append and message-added events remain exactly once per user/assistant turn."
       ],
       "oracle": {
-        "paths": ["upstream conversational-flow regression tests in commit 56e0e85a8186abd2929c17fed22e54bbbc327778"],
+        "paths": ["lib/crewai/tests/test_flow_conversation.py"],
         "tests": ["custom @listen persisted restore", "built-in converse no-double-append", "single message-added event pair"],
         "source_url": "https://github.com/crewAIInc/crewAI/commit/56e0e85a8186abd2929c17fed22e54bbbc327778"
       },
@@ -623,7 +623,13 @@
         "Team/workflow cancellation can cascade to registered dispatched sub-runs."
       ],
       "oracle": {
-        "paths": ["upstream gated Studio/dispatch regression suites documented in commit 0d156974c2b4a1a60cec58565cfae540c4b39925"],
+        "paths": [
+          "libs/agno/tests/unit/db/test_reserved_run_metadata.py",
+          "libs/agno/tests/unit/os/test_preview_stamp_forgery.py",
+          "libs/agno/tests/unit/tools/test_studio.py",
+          "libs/agno/tests/unit/tools/test_studio_preview_stamp.py",
+          "libs/agno/tests/unit/tools/test_studio_runner.py"
+        ],
         "tests": ["top-level self-dispatch refusal", "A-B-A cycle refusal", "depth-2 third-hop refusal", "reserved-metadata forgery tripwires", "28 targeted mutations killed"],
         "source_url": "https://github.com/agno-agi/agno/commit/0d156974c2b4a1a60cec58565cfae540c4b39925",
         "notes": "Upstream commit records explicit pre-fix baselines and mutation verification."
