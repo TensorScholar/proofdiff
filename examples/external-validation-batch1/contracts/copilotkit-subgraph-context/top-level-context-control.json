@@ -1,0 +1,20 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SYSTEM_INSTRUCTION_CHANGED"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:top_level.app_context_propagates"
+    ]
+  },
+  "id": "top_level.app_context_propagates",
+  "risk": "medium",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Top-level application-context propagation remains intact"
+}

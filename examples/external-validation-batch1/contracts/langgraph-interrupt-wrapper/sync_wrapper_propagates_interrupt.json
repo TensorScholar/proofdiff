@@ -1,0 +1,23 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SOURCE_CODE_CHANGED"
+    ],
+    "manifest_paths": [
+      "source"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:hitl.sync_wrapper_propagates_interrupt"
+    ]
+  },
+  "id": "hitl.sync_wrapper_propagates_interrupt",
+  "risk": "critical",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Sync tool-call middleware preserves graph interrupt control flow"
+}

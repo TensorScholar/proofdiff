@@ -1,0 +1,20 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SYSTEM_INSTRUCTION_CHANGED"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:schema.direct_ref_preserves_type"
+    ]
+  },
+  "id": "schema.direct_ref_preserves_type",
+  "risk": "low",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Direct reference resolution remains intact"
+}

@@ -1,0 +1,90 @@
+{
+  "batch_id": "PROOFDIFF-EXT-BATCH1-001",
+  "cases": [
+    {
+      "base_sha": "de60d05b0c5af345c8a3893673196156a38a249a",
+      "candidate_sha": "f32f613a7f502af445405d7ef55aae75a276f835",
+      "change_class": "tool_schema_semantic_preservation",
+      "changed_paths": [
+        "src/agents/strict_schema.py"
+      ],
+      "id": "B1-01",
+      "oracle": "Upstream PR regression: chained sibling-bearing $ref aliases must resolve without losing the underlying type.",
+      "protected_contracts": [
+        "schema.chained_ref_preserves_type"
+      ],
+      "repository": "openai/openai-agents-python",
+      "risk": "high",
+      "slug": "openai-agents-chained-ref",
+      "static_tag_baseline_contracts": [
+        "schema.chained_ref_preserves_type"
+      ],
+      "status": "merged_historical_fix",
+      "upstream_pr": 3205
+    },
+    {
+      "base_sha": "3ff7a5160655e4fd1d59b541da1b83887d50307f",
+      "candidate_sha": "e9148b305025620e9f43c4eb3e597e5b9bcef419",
+      "change_class": "runtime_context_and_tool_propagation",
+      "changed_paths": [
+        "sdk-python/copilotkit/copilotkit_lg_middleware.py",
+        "sdk-python/copilotkit/langgraph_agui_agent.py"
+      ],
+      "id": "B1-02",
+      "oracle": "Upstream issue + merged regression: child LangGraph agents must receive frontend tools and app context.",
+      "protected_contracts": [
+        "subgraph.frontend_tools_propagate",
+        "subgraph.app_context_propagates"
+      ],
+      "repository": "CopilotKit/CopilotKit",
+      "risk": "high",
+      "slug": "copilotkit-subgraph-context",
+      "static_tag_baseline_contracts": [
+        "subgraph.frontend_tools_propagate",
+        "subgraph.app_context_propagates"
+      ],
+      "status": "merged_historical_fix",
+      "upstream_issue": 3886,
+      "upstream_pr": 5373
+    },
+    {
+      "base_sha": "5931a5f0b313feff24e2516a586c55601b868ac1",
+      "candidate_sha": "4680a4e94fb503ec321ca6c0a1b0af36db8dd9e1",
+      "change_class": "hitl_control_flow_integrity",
+      "changed_paths": [
+        "libs/prebuilt/langgraph/prebuilt/tool_node.py"
+      ],
+      "id": "B1-03",
+      "oracle": "Upstream issue + patch regression: GraphBubbleUp/GraphInterrupt must propagate through sync and async tool-call wrappers.",
+      "protected_contracts": [
+        "hitl.sync_wrapper_propagates_interrupt",
+        "hitl.async_wrapper_propagates_interrupt"
+      ],
+      "repository": "langchain-ai/langgraph",
+      "risk": "critical",
+      "slug": "langgraph-interrupt-wrapper",
+      "static_tag_baseline_contracts": [
+        "hitl.sync_wrapper_propagates_interrupt",
+        "hitl.async_wrapper_propagates_interrupt"
+      ],
+      "status": "unmerged_patch_candidate",
+      "upstream_issue": 8217,
+      "upstream_pr": 8224
+    }
+  ],
+  "frozen_before_execution": true,
+  "proofdiff_baseline": {
+    "commit": "a6f32784553277d46065c8bae6d61dc57aeb1382",
+    "release": "v0.1.0",
+    "repository": "TensorScholar/proofdiff"
+  },
+  "purpose": "Stress ProofDiff v0.1.0 against independently labeled external AI-system changes without selector tuning.",
+  "rules": {
+    "do_not_tune_core_before_first_result": true,
+    "false_safe_on_critical_is_release_blocking": true,
+    "report_micro_suite_reduction_as_validation_only_not_roi": true,
+    "retain_failed_cases": true,
+    "separate_unmerged_from_merged_evidence": true
+  },
+  "schema_version": "1"
+}

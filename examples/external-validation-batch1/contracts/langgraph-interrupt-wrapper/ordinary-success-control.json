@@ -1,0 +1,20 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SYSTEM_INSTRUCTION_CHANGED"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:tool_wrapper.ordinary_success_preserved"
+    ]
+  },
+  "id": "tool_wrapper.ordinary_success_preserved",
+  "risk": "medium",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Ordinary wrapped tool success remains intact"
+}

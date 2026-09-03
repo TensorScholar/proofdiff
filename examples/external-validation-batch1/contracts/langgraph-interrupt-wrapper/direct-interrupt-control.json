@@ -1,0 +1,20 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "TOOL_DESCRIPTION_CHANGED"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:hitl.direct_interrupt_propagates"
+    ]
+  },
+  "id": "hitl.direct_interrupt_propagates",
+  "risk": "medium",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Direct tool execution preserves graph interrupt control flow"
+}

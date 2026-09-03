@@ -1,0 +1,23 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SOURCE_CODE_CHANGED"
+    ],
+    "manifest_paths": [
+      "source"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:subgraph.app_context_propagates"
+    ]
+  },
+  "id": "subgraph.app_context_propagates",
+  "risk": "high",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Application context reaches child LangGraph agents"
+}

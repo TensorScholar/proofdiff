@@ -1,0 +1,29 @@
+{
+  "always_run": false,
+  "covers": {
+    "change_types": [
+      "SOURCE_CODE_CHANGED",
+      "TOOL_INPUT_SCHEMA_EXPANDED",
+      "TOOL_INPUT_SCHEMA_RESTRICTED",
+      "TOOL_SCHEMA_CHANGED"
+    ],
+    "manifest_paths": [
+      "source"
+    ],
+    "tools": [
+      "alias_tool"
+    ]
+  },
+  "expect": {
+    "output_contains": [
+      "OK:schema.chained_ref_preserves_type"
+    ]
+  },
+  "id": "schema.chained_ref_preserves_type",
+  "risk": "high",
+  "tags": [
+    "external-validation",
+    "batch1"
+  ],
+  "title": "Chained sibling-bearing references preserve the underlying tool input type"
+}
