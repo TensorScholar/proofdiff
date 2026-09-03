@@ -66,11 +66,7 @@ def _run_once(python: Path, probe: Path, pythonpath: Path | None = None) -> dict
 
 
 def _normalized_observation(value: dict[str, Any]) -> dict[str, Any]:
-    return {
-        key: item
-        for key, item in value.items()
-        if key not in {"process_exit_code", "stderr_tail"}
-    }
+    return {key: item for key, item in value.items() if key not in {"process_exit_code", "stderr_tail"}}
 
 
 def capture(
@@ -100,9 +96,7 @@ def _capture_is_valid(result: dict[str, Any]) -> bool:
     if not isinstance(summary, dict):
         return False
     return (
-        summary.get("probe_error_runs") == 0
-        and summary.get("nonzero_exit_runs") == 0
-        and summary.get("stable") is True
+        summary.get("probe_error_runs") == 0 and summary.get("nonzero_exit_runs") == 0 and summary.get("stable") is True
     )
 
 
