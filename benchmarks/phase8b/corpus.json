@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "phase": "8B",
-  "corpus_status": "draft",
+  "corpus_status": "frozen",
   "experiment_status": "preregistering",
   "created_at": "2026-09-03",
-  "frozen_at": null,
+  "frozen_at": "2026-09-03T12:09:43Z",
   "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
   "targets": {
     "new_historical_cases": 20,
