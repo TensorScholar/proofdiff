@@ -1,0 +1,72 @@
+name: Phase 8B Gate D1 materialization
+
+on:
+  push:
+    branches: [phase-8b-gate-d-materialize]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase8b-gate-d1-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout frozen ProofDiff evaluator
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Validate frozen Gate D0 protocol
+        run: python benchmarks/phase8b/validate_gate_d.py --require-freeze-ready
+
+      - name: Verify D1 materializer cannot import or invoke BIG
+        run: |
+          python -m pip install -e '.[dev,yaml]'
+          pytest -q tests/test_phase8b_gate_d_materialization.py
+
+      - name: Materialize exact frozen upstream inputs
+        run: |
+          python benchmarks/phase8b/materialize_gate_d_inputs.py \
+            --output .proofdiff/phase8b/gate-d1
+
+      - name: Independently validate materialized candidate-visible payloads
+        run: |
+          python benchmarks/phase8b/validate_gate_d_materialization.py \
+            --root .proofdiff/phase8b/gate-d1
+
+      - name: Print deterministic manifest digest
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('.proofdiff/phase8b/gate-d1/gate_d_input_manifest.json')
+          manifest = json.loads(path.read_text(encoding='utf-8'))
+          print(f"case_count={manifest['case_count']}")
+          print(f"run_count={manifest['run_count']}")
+          print(f"snapshot_count={manifest['snapshot_count']}")
+          print(f"input_manifest_digest={manifest['input_manifest_digest']}")
+          print(f"candidate_execution_count={manifest['candidate_execution_count']}")
+          PY
+
+      - name: Upload D1 materialization evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: proofdiff-phase8b-gate-d1-${{ github.sha }}-${{ github.run_id }}
+          path: .proofdiff/phase8b/gate-d1/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
