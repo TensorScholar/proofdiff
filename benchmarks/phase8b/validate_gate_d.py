@@ -40,7 +40,7 @@ def _load(path: Path) -> dict[str, Any]:
 def _git_blob_sha(path: Path) -> str:
     data = path.read_bytes()
     header = f"blob {len(data)}\0".encode()
-    return hashlib.sha1(header + data).hexdigest()  # noqa: S324 - Git object identity is SHA-1 in this repository.
+    return hashlib.sha1(header + data).hexdigest()
 
 
 def _expect(findings: list[str], condition: bool, message: str) -> None:
