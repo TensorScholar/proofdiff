@@ -34,12 +34,12 @@ jobs:
         run: mv benchmarks/phase8b/big_candidate.py "$RUNNER_TEMP/big_candidate.py.disabled"
       - name: Materialize candidate-visible inputs only
         run: >-
-          python benchmarks/phase8b/materialize_gate_d_inputs.py
+          python -m benchmarks.phase8b.materialize_gate_d_inputs
           --work-dir "$RUNNER_TEMP/phase8b-d1-work"
           --output "$RUNNER_TEMP/gate_d_input_manifest.json"
       - name: Validate D1 manifest
         run: >-
-          python benchmarks/phase8b/validate_gate_d_inputs.py
+          python -m benchmarks.phase8b.validate_gate_d_inputs
           "$RUNNER_TEMP/gate_d_input_manifest.json"
       - name: Show deterministic manifest digest
         run: sha256sum "$RUNNER_TEMP/gate_d_input_manifest.json"
