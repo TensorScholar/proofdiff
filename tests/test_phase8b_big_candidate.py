@@ -166,7 +166,7 @@ def test_literal_dynamic_import_is_resolved_as_static_program_evidence() -> None
             ),
         },
         changed_paths=["pkg/provider.py"],
-        behaviors=[_behavior("remote-provider", "execute remote provider", risk="high")],
+        behaviors=[_behavior("remote-provider", "execute remote consumer", risk="high")],
         calibration_freshness="fresh",
     )
 
