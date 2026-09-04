@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0",
+  "phase": "8B",
+  "gate": "D",
+  "subgate": "D1",
+  "freeze_status": "frozen",
+  "frozen_at": "2026-09-04T16:52:48Z",
+  "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
+  "materialization_main_sha": "954cdea85d24ad606a168517686fa38d2cd21eca",
+  "historical_candidate_observation_state_at_freeze": "unobserved",
+  "d2_execution_authorized": false,
+  "scientific_invariant": "The exact candidate-visible payload bytes frozen in D1 must be the exact payload bytes consumed by D2; upstream rematerialization is forbidden.",
+  "frozen_repository_blobs": {
+    "gate_d": {
+      "path": "benchmarks/phase8b/gate_d.json",
+      "git_blob_sha": "8f9d9fc460535551c90e8de0ec2d016d00786abf"
+    },
+    "corpus": {
+      "path": "benchmarks/phase8b/corpus.json",
+      "git_blob_sha": "8bcaa8577f1c656b16dfd3e2ab51ba119dabce7b"
+    },
+    "gate_b": {
+      "path": "benchmarks/phase8b/gate_b.json",
+      "git_blob_sha": "c05cca3e51a0bb6ef1cf3c44ebf12cf66daedc72"
+    },
+    "static_rules": {
+      "path": "benchmarks/phase8b/static_rules.json",
+      "git_blob_sha": "1929d162912c29f56037c2f01d7aa8303f5194af"
+    },
+    "harness": {
+      "path": "benchmarks/phase8b/harness.py",
+      "git_blob_sha": "009d76e91dbfb61270f0d273d580eda11fe48f8f"
+    },
+    "methods": {
+      "path": "benchmarks/phase8b/methods.py",
+      "git_blob_sha": "426e79e739af1ec68318dcdb8bfe91be15cb4612"
+    },
+    "candidate": {
+      "id": "minimal_big_v1",
+      "path": "benchmarks/phase8b/big_candidate.py",
+      "git_blob_sha": "c4668c5fb3e2e4f299d5d6a3b3adb0accbe68817"
+    },
+    "materializer": {
+      "path": "benchmarks/phase8b/materialize_gate_d_inputs.py",
+      "git_blob_sha": "667ffef668b7525b7c92ea8354ec2d5985e1be44"
+    },
+    "d1_validator": {
+      "path": "benchmarks/phase8b/validate_gate_d_inputs.py",
+      "git_blob_sha": "1fa9d273bacdb5a1a8edd125aa3ce0d8187d1e5c"
+    },
+    "d1_workflow": {
+      "path": ".github/workflows/phase8b-gate-d1.yml",
+      "git_blob_sha": "0506bbffa7c4cdbfea8f0c2565e7a13cd325f0e1"
+    }
+  },
+  "authoritative_artifact": {
+    "repository": "TensorScholar/proofdiff",
+    "workflow_run_id": 33896967976,
+    "artifact_id": 9946174613,
+    "artifact_name": "phase8b-gate-d1-input-bundle-954cdea85d24ad606a168517686fa38d2cd21eca",
+    "format": "github_actions_zip",
+    "size_bytes": 122641443,
+    "sha256": "94a95e98e9faf2e8619ea521ac0b606d7303fc36840676cdbe489b0732f08440",
+    "created_at": "2026-09-04T16:48:23Z",
+    "expires_at": "2026-12-03T16:46:09Z",
+    "retention_days": 90
+  },
+  "candidate_visible_bundle": {
+    "manifest_schema_version": "1.1",
+    "bundle_format": "canonical_candidate_payload_json_v1",
+    "candidate_id": "minimal_big_v1",
+    "calibration_freshness": "not_yet_calibrated",
+    "evaluation_case_count": 23,
+    "case_direction_count": 46,
+    "payload_file_count": 46,
+    "candidate_payload_bundle_digest": "854ff2e2097673972c12a4ea57c49d00941af8591349961fb6fa05263ff8dc5c",
+    "candidate_visible_payload_set_digest": "4e9ed3c35fa12e119b7dc3b46e053ca0f69828e825852b3ed3d93ad9b8926ca0",
+    "input_manifest_digest": "79acf5265bf9ddd461379db1c12491d53811ad822ef25849b2443f7323ad3cc0"
+  },
+  "out_of_workflow_download_audit": {
+    "status": "passed",
+    "audit_errors": 0,
+    "downloaded_zip_sha256": "94a95e98e9faf2e8619ea521ac0b606d7303fc36840676cdbe489b0732f08440",
+    "downloaded_zip_size_bytes": 122641443,
+    "zip_file_count": 47,
+    "zip_symlink_count": 0,
+    "uncompressed_bundle_bytes": 621123664,
+    "checks": {
+      "outer_artifact_digest_match": "passed",
+      "duplicate_entry_rejection": "passed",
+      "unsafe_path_rejection": "passed",
+      "closed_set_membership": "passed",
+      "payload_digest_and_byte_count": "passed",
+      "canonical_json_bytes": "passed",
+      "candidate_visible_key_set": "passed",
+      "evaluator_only_leakage_scan": "passed",
+      "repo_and_direction_identity": "passed",
+      "calibration_state": "passed",
+      "source_snapshot_digest_recompute": "passed",
+      "production_diff_digest_recompute": "passed",
+      "behavior_catalog_digest_recompute": "passed",
+      "bundle_digest_recompute": "passed",
+      "payload_set_digest_recompute": "passed",
+      "manifest_self_digest_recompute": "passed",
+      "merged_repository_blob_identity": "passed"
+    }
+  },
+  "d2_consumption_contract": {
+    "artifact_source": "authoritative_artifact.artifact_id",
+    "outer_zip_sha256_must_match": true,
+    "safe_extraction_required": true,
+    "closed_set_bundle_validation_required": true,
+    "upstream_rematerialization_forbidden": true,
+    "candidate_network_access": false,
+    "candidate_filesystem_access_outside_payload": false,
+    "candidate_git_metadata_access": false,
+    "candidate_benchmark_metadata_access": false,
+    "candidate_input": "raw canonical payload JSON only",
+    "evaluator_manifest_visible_to_candidate": false,
+    "case_id_visible_to_candidate": false,
+    "ground_truth_visible_to_candidate": false,
+    "partial_result_tuning_forbidden": true,
+    "candidate_or_protocol_tuning_after_first_invocation": "invalid_experiment",
+    "artifact_expiry_policy": "If the GitHub Actions artifact expires before D2, D2 remains blocked unless the exact downloaded ZIP bytes are available with the same outer SHA-256 and the same validated inner digests. Re-materialization is not a substitute."
+  },
+  "next_gate": {
+    "id": "D2",
+    "state": "blocked_pending_blind_executor_preflight",
+    "authorization_condition": "A separately reviewed D2 executor must consume only the frozen D1 artifact bytes, pass synthetic-only tests and full CI, and mechanically preserve the first-observation lock before historical/control candidate invocation."
+  }
+}
