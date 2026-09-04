@@ -144,9 +144,7 @@ def _synthetic_valid_manifest() -> dict[str, object]:
         run_key = d1.candidate_case_envelope(case)["run_key"]
         for direction in d1.DIRECTIONS:
             baseline, candidate = (
-                (case["base_sha"], case["head_sha"])
-                if direction == "forward"
-                else (case["head_sha"], case["base_sha"])
+                (case["base_sha"], case["head_sha"]) if direction == "forward" else (case["head_sha"], case["base_sha"])
             )
             rows.append(
                 {
