@@ -122,7 +122,10 @@ def candidate_case_envelope(case: dict[str, Any]) -> dict[str, Any]:
 
 def is_candidate_source_path(path: str) -> bool:
     """Keep production source while removing common oracle/prose surfaces."""
-    normalized = path.replace("\\", "/").lstrip("./")
+    normalized = path.replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    normalized = normalized.lstrip("/")
     pure = PurePosixPath(normalized)
     lowered_parts = {part.lower() for part in pure.parts}
     name = pure.name.lower()
