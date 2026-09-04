@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "rules_status": "draft",
+  "rules_status": "frozen",
   "component_rules": {
     "pydantic/pydantic-ai": [
       {"prefix": "pydantic_ai_slim/pydantic_ai/models/", "tags": ["provider-adapter", "tool-calls", "streaming"]},
