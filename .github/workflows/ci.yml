@@ -37,6 +37,7 @@ jobs:
       - run: python benchmarks/phase8b/validate_corpus.py --require-freeze-ready
       - run: python benchmarks/phase8b/validate_gate_b.py --require-freeze-ready
       - run: python benchmarks/phase8b/validate_gate_d.py --require-freeze-ready
+      - run: python benchmarks/phase8b/validate_gate_d1.py --require-freeze-ready
       - run: python scripts/check_architecture.py
       - run: python scripts/security_scan.py
       - name: Set canonical build timestamp
