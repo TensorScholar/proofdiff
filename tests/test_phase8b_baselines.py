@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from benchmarks.phase8b.harness import (
     assert_candidate_payload_no_leakage,
     behavior_id,
