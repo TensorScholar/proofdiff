@@ -100,18 +100,39 @@ def test_forward_and_reverse_payloads_are_directionally_distinct_and_determinist
     assert forward["head_sha"] == reverse["base_sha"]
 
 
-def test_materializer_has_no_big_import_or_candidate_invocation_and_no_lazy_blob_fetch() -> None:
+def test_materializer_has_no_big_import_or_candidate_invocation_and_uses_bounded_full_blob_fetch() -> None:
     source = d1.MATERIALIZER_PATH.read_text(encoding="utf-8")
     tree = ast.parse(source)
     imported: list[str] = []
+    git_calls: list[ast.Call] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             imported.extend(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module:
             imported.append(node.module)
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_git":
+            git_calls.append(node)
+
     assert all("big_candidate" not in name for name in imported)
     assert "select_with_big" not in source
-    assert "--filter=blob:none" not in source
+
+    fetch_calls = [
+        call
+        for call in git_calls
+        if any(isinstance(arg, ast.Constant) and arg.value == "fetch" for arg in call.args)
+    ]
+    assert len(fetch_calls) == 1
+    fetch_literals = {
+        arg.value
+        for arg in fetch_calls[0].args
+        if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+    }
+    assert "--filter=blob:none" not in fetch_literals
+    assert {"fetch", "--no-tags", "--depth=1", "origin"} <= fetch_literals
+    timeout_keywords = [keyword for keyword in fetch_calls[0].keywords if keyword.arg == "timeout_seconds"]
+    assert len(timeout_keywords) == 1
+    assert isinstance(timeout_keywords[0].value, ast.Name)
+    assert timeout_keywords[0].value.id == "FETCH_TIMEOUT_SECONDS"
     assert d1.FETCH_TIMEOUT_SECONDS > 0
 
 
@@ -223,6 +244,7 @@ def _synthetic_valid_bundle(tmp_path: Path) -> tuple[dict[str, Any], Path]:
         "materialization_status": "materialized",
         "protocol_blob_sha": d1v._git_blob_sha(d1.GATE_D_PATH),
         "corpus_blob_sha": d1v._git_blob_sha(d1.CORPUS_PATH),
+        "harness_blob_sha": d1v._git_blob_sha(d1.HARNESS_PATH),
         "materializer_blob_sha": d1._git_blob_sha(d1.MATERIALIZER_PATH),
         "candidate_id": gate_d["frozen_inputs"]["candidate"]["id"],
         "candidate_blob_sha": gate_d["frozen_inputs"]["candidate"]["git_blob_sha"],
@@ -301,6 +323,10 @@ def test_manifest_validator_rejects_posthoc_identity_and_calibration_drift(tmp_p
         "materializer blob mismatch" in item
         for item in d1v.validate_manifest(stale_materializer, bundle_dir=bundle_dir)
     )
+
+    stale_harness = copy.deepcopy(valid)
+    stale_harness["harness_blob_sha"] = "0" * 40
+    assert any("harness blob mismatch" in item for item in d1v.validate_manifest(stale_harness, bundle_dir=bundle_dir))
 
     imported = copy.deepcopy(valid)
     imported["candidate_imported_during_materialization"] = True
