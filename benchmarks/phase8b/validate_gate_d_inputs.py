@@ -17,6 +17,7 @@ from benchmarks.phase8b.materialize_gate_d_inputs import (
     BUNDLE_FORMAT,
     DIFF_POLICY,
     DIRECTIONS,
+    HARNESS_PATH,
     MANIFEST_NAME,
     MATERIALIZER_PATH,
     PAYLOAD_KEYS,
@@ -251,6 +252,7 @@ def validate_manifest(manifest: dict[str, Any], *, bundle_dir: Path | None = Non
 
     _expect(findings, manifest.get("protocol_blob_sha") == _git_blob_sha(GATE_D_PATH), "protocol blob mismatch")
     _expect(findings, manifest.get("corpus_blob_sha") == _git_blob_sha(CORPUS_PATH), "corpus blob mismatch")
+    _expect(findings, manifest.get("harness_blob_sha") == _git_blob_sha(HARNESS_PATH), "harness blob mismatch")
     _expect(
         findings,
         manifest.get("materializer_blob_sha") == _git_blob_sha(MATERIALIZER_PATH),
