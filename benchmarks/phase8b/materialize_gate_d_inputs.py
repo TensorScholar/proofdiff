@@ -41,6 +41,8 @@ PAYLOAD_KEYS = {
 SOURCE_POLICY = "candidate_relevant_utf8_python_production_files_only_v1"
 DIFF_POLICY = "git_diff_no_ext_no_color_no_renames_full_index_unified3_sanitized_paths_v1"
 BUNDLE_FORMAT = "canonical_candidate_payload_json_v1"
+LOCAL_GIT_TIMEOUT_SECONDS = 60
+FETCH_TIMEOUT_SECONDS = 300
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -67,12 +69,22 @@ def _git_blob_sha(path: Path) -> str:
     return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
 
 
-def _git(repo_dir: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
-    return subprocess.run(
-        ["git", "-C", str(repo_dir), *args],
-        check=check,
-        capture_output=True,
-    )
+def _git(
+    repo_dir: Path,
+    *args: str,
+    check: bool = True,
+    timeout_seconds: int = LOCAL_GIT_TIMEOUT_SECONDS,
+) -> subprocess.CompletedProcess[bytes]:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(repo_dir), *args],
+            check=check,
+            capture_output=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        command = " ".join(["git", "-C", str(repo_dir), *args])
+        raise TimeoutError(f"git command exceeded {timeout_seconds}s: {command}") from exc
 
 
 def _decode_python(path: str, data: bytes) -> str:
@@ -96,15 +108,34 @@ def _validate_repo(repo: str) -> None:
 
 def _prepare_repo(*, repo: str, shas: set[str], work_root: Path) -> Path:
     _validate_repo(repo)
+    ordered_shas = sorted(shas)
+    if not ordered_shas:
+        raise ValueError(f"no frozen SHAs supplied for {repo}")
+    for sha in ordered_shas:
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            raise ValueError(f"expected immutable 40-character SHA for {repo}: {sha!r}")
+
     repo_dir = work_root / repo.replace("/", "__")
     repo_dir.mkdir(parents=True, exist_ok=False)
     _git(repo_dir, "init", "--quiet")
     _git(repo_dir, "remote", "add", "origin", f"https://github.com/{repo}.git")
-    for sha in sorted(shas):
-        if not re.fullmatch(r"[0-9a-f]{40}", sha):
-            raise ValueError(f"expected immutable 40-character SHA for {repo}: {sha!r}")
-        _git(repo_dir, "fetch", "--quiet", "--no-tags", "--filter=blob:none", "--depth=1", "origin", sha)
-        resolved = _git(repo_dir, "rev-parse", "FETCH_HEAD^{commit}").stdout.decode("ascii").strip()
+
+    # Fetch every frozen commit for one repository in a single shallow pack.
+    # Deliberately do not use --filter=blob:none: D1 needs the production source
+    # blobs, and lazy promisor fetches turn deterministic snapshotting into an
+    # N+1 network operation with poor timeout behavior.
+    _git(
+        repo_dir,
+        "fetch",
+        "--quiet",
+        "--no-tags",
+        "--depth=1",
+        "origin",
+        *ordered_shas,
+        timeout_seconds=FETCH_TIMEOUT_SECONDS,
+    )
+    for sha in ordered_shas:
+        resolved = _git(repo_dir, "rev-parse", f"{sha}^{{commit}}").stdout.decode("ascii").strip()
         if resolved != sha:
             raise ValueError(f"upstream fetch identity mismatch for {repo}: expected {sha}, got {resolved}")
     return repo_dir
