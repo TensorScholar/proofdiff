@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
     paths:
+      - "benchmarks/phase8b/corpus.json"
+      - "benchmarks/phase8b/gate_d.json"
+      - "benchmarks/phase8b/harness.py"
+      - "benchmarks/phase8b/big_candidate.py"
       - "benchmarks/phase8b/materialize_gate_d_inputs.py"
       - "benchmarks/phase8b/validate_gate_d_inputs.py"
       - "tests/test_phase8b_gate_d_materialization.py"
@@ -18,7 +22,7 @@ concurrency:
 
 jobs:
   materialize:
-    timeout-minutes: 30
+    timeout-minutes: 45
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -32,29 +36,39 @@ jobs:
         run: python benchmarks/phase8b/validate_gate_d.py --require-freeze-ready
       - name: Physically disable BIG candidate during D1
         run: mv benchmarks/phase8b/big_candidate.py "$RUNNER_TEMP/big_candidate.py.disabled"
-      - name: Materialize candidate-visible inputs only
+      - name: Materialize exact candidate-visible bundle only
         run: >-
           python -m benchmarks.phase8b.materialize_gate_d_inputs
           --work-dir "$RUNNER_TEMP/phase8b-d1-work"
-          --output "$RUNNER_TEMP/gate_d_input_manifest.json"
-      - name: Validate D1 manifest
+          --bundle-dir "$RUNNER_TEMP/phase8b-gate-d1-bundle"
+      - name: Validate exact closed-set D1 bundle
         run: >-
           python -m benchmarks.phase8b.validate_gate_d_inputs
-          "$RUNNER_TEMP/gate_d_input_manifest.json"
-      - name: Show deterministic manifest digest
-        run: sha256sum "$RUNNER_TEMP/gate_d_input_manifest.json"
+          "$RUNNER_TEMP/phase8b-gate-d1-bundle"
+      - name: Show deterministic bundle evidence
+        run: |
+          python - <<'PY'
+          import json
+          import pathlib
+
+          bundle = pathlib.Path("${{ runner.temp }}/phase8b-gate-d1-bundle")
+          manifest = json.loads((bundle / "gate_d_input_manifest.json").read_text())
+          print(f"payload_file_count={manifest['payload_file_count']}")
+          print(f"payload_bundle_digest={manifest['candidate_payload_bundle_digest']}")
+          print(f"input_manifest_digest={manifest['input_manifest_digest']}")
+          PY
       - name: Restore BIG candidate for post-job workspace integrity
         if: always()
         run: >-
           if [ -f "$RUNNER_TEMP/big_candidate.py.disabled" ]; then
             mv "$RUNNER_TEMP/big_candidate.py.disabled" benchmarks/phase8b/big_candidate.py;
           fi
-      - name: Upload frozen-input manifest candidate
+      - name: Upload exact frozen-input bundle candidate
         if: success()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: phase8b-gate-d1-input-manifest-${{ github.sha }}
-          path: ${{ runner.temp }}/gate_d_input_manifest.json
+          name: phase8b-gate-d1-input-bundle-${{ github.sha }}
+          path: ${{ runner.temp }}/phase8b-gate-d1-bundle
           if-no-files-found: error
           compression-level: 9
           retention-days: 90
