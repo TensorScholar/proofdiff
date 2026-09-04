@@ -117,15 +117,11 @@ def test_materializer_has_no_big_import_or_candidate_invocation_and_uses_bounded
     assert "select_with_big" not in source
 
     fetch_calls = [
-        call
-        for call in git_calls
-        if any(isinstance(arg, ast.Constant) and arg.value == "fetch" for arg in call.args)
+        call for call in git_calls if any(isinstance(arg, ast.Constant) and arg.value == "fetch" for arg in call.args)
     ]
     assert len(fetch_calls) == 1
     fetch_literals = {
-        arg.value
-        for arg in fetch_calls[0].args
-        if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+        arg.value for arg in fetch_calls[0].args if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
     }
     assert "--filter=blob:none" not in fetch_literals
     assert {"fetch", "--no-tags", "--depth=1", "origin"} <= fetch_literals
