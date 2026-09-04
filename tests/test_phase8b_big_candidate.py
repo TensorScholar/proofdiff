@@ -3,7 +3,6 @@ from __future__ import annotations
 import builtins
 
 import pytest
-
 from benchmarks.phase8b.big_candidate import select_with_big
 
 
@@ -247,7 +246,11 @@ def test_empty_change_set_is_rejected() -> None:
 def test_graph_digest_and_output_are_deterministic_under_input_ordering() -> None:
     sources_a = {
         "pkg/core.py": "def normalize_payload(value):\n    return value\n",
-        "pkg/service.py": "from pkg.core import normalize_payload\n\ndef execute_flow(value):\n    return normalize_payload(value)\n",
+        "pkg/service.py": (
+            "from pkg.core import normalize_payload\n\n"
+            "def execute_flow(value):\n"
+            "    return normalize_payload(value)\n"
+        ),
     }
     sources_b = dict(reversed(list(sources_a.items())))
     behaviors_a = [
