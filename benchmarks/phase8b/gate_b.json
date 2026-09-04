@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "phase": "8B",
   "gate": "B",
-  "gate_status": "draft",
+  "gate_status": "frozen",
   "created_at": "2026-09-04",
-  "frozen_at": null,
+  "frozen_at": "2026-09-04T11:46:47Z",
   "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
   "corpus_anchor": {
     "repository": "TensorScholar/proofdiff",
