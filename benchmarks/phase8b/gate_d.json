@@ -1,0 +1,192 @@
+{
+  "schema_version": "1.0",
+  "phase": "8B",
+  "gate": "D",
+  "protocol_status": "draft",
+  "observation_status": "unobserved",
+  "created_at": "2026-09-04",
+  "frozen_at": null,
+  "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
+  "protocol_base_commit": "4fcd755b17cfe1dd8ef5daa0ceed7d8e39fb11fb",
+  "frozen_inputs": {
+    "corpus": {
+      "path": "benchmarks/phase8b/corpus.json",
+      "git_blob_sha": "8bcaa8577f1c656b16dfd3e2ab51ba119dabce7b"
+    },
+    "gate_b": {
+      "path": "benchmarks/phase8b/gate_b.json",
+      "git_blob_sha": "c05cca3e51a0bb6ef1cf3c44ebf12cf66daedc72"
+    },
+    "static_rules": {
+      "path": "benchmarks/phase8b/static_rules.json",
+      "git_blob_sha": "1929d162912c29f56037c2f01d7aa8303f5194af"
+    },
+    "harness": {
+      "path": "benchmarks/phase8b/harness.py",
+      "git_blob_sha": "009d76e91dbfb61270f0d273d580eda11fe48f8f"
+    },
+    "methods": {
+      "path": "benchmarks/phase8b/methods.py",
+      "git_blob_sha": "426e79e739af1ec68318dcdb8bfe91be15cb4612"
+    },
+    "candidate": {
+      "id": "minimal_big_v1",
+      "path": "benchmarks/phase8b/big_candidate.py",
+      "git_blob_sha": "c4668c5fb3e2e4f299d5d6a3b3adb0accbe68817",
+      "gate_c_pr": 25,
+      "gate_c_head_sha": "8ae279a6b29bc8f7f293982b4079338c12ade21a",
+      "main_merge_sha": "4fcd755b17cfe1dd8ef5daa0ceed7d8e39fb11fb"
+    }
+  },
+  "subgates": {
+    "D0": "freeze_protocol_before_any_candidate_corpus_execution",
+    "D1": "materialize_and_digest_candidate_visible_inputs_without_candidate_execution",
+    "D2": "execute_one_shot_first_observation_and_score_against_frozen_gate_b"
+  },
+  "execution_design": {
+    "headline_arm": "qualified_historical",
+    "controls_in_headline": false,
+    "directions": ["forward", "reverse"],
+    "experimental_unit": "case_direction",
+    "candidate_calibration_freshness": "not_yet_calibrated",
+    "candidate_network_access": false,
+    "candidate_filesystem_access": false,
+    "candidate_git_metadata_access": false,
+    "candidate_benchmark_repo_access": false,
+    "candidate_visible_fields": [
+      "repo",
+      "base_sha",
+      "head_sha",
+      "sanitized_baseline_source",
+      "sanitized_candidate_source",
+      "production_diff",
+      "behavior_catalog",
+      "method_config"
+    ],
+    "evaluator_only_fields": [
+      "case_id",
+      "family_id",
+      "criticality",
+      "confounding_risk",
+      "protected_invariants",
+      "oracle",
+      "ground_truth_behavior_ids",
+      "source_url",
+      "pr_number",
+      "upstream_reference",
+      "discrimination_reason",
+      "notes",
+      "case_title"
+    ],
+    "cold_start_policy": {
+      "headline_uses_uncalibrated_state": true,
+      "reason": "No independent pre-Gate-D calibration evidence exists for minimal_big_v1.",
+      "same_corpus_post_calibration_rerun_headline_eligible": false,
+      "future_independent_prospective_cases_required_for_steady_state_claim": true
+    }
+  },
+  "D1_input_materialization": {
+    "status": "not_materialized",
+    "candidate_execution_forbidden": true,
+    "evaluator_network_allowed": true,
+    "fetch_policy": "pinned_upstream_repository_and_exact_base_head_sha_only",
+    "sanitizer": "frozen_inputs.harness",
+    "anti_leakage_assertion_required": true,
+    "manifest_path": "benchmarks/phase8b/results/gate_d_input_manifest.json",
+    "manifest_freeze_required_before_D2": true,
+    "snapshot_digest": "sha256_of_canonical_candidate_visible_payload",
+    "materialization_failures": "block_D2_until_resolved_without_candidate_execution"
+  },
+  "D2_first_observation": {
+    "run_id": "phase8b_gate_d_v1_first_observation",
+    "result_path": "benchmarks/phase8b/results/gate_d_first_observation.json",
+    "candidate_invocation_starts_observation_lock": true,
+    "all_raw_candidate_outputs_preserved": true,
+    "partial_attempts_preserved": true,
+    "identical_replay_for_infrastructure_recovery_allowed": true,
+    "replay_requires_identical_candidate_input_and_protocol_blobs": true,
+    "candidate_or_protocol_tuning_after_first_invocation": "invalid_experiment",
+    "threshold_or_baseline_tuning_after_first_invocation": "invalid_experiment",
+    "result_replacement_forbidden": true,
+    "result_append_only_history_required": true
+  },
+  "scoring_policy": {
+    "source": "frozen_inputs.gate_b",
+    "overrides_forbidden": true,
+    "ground_truth_visibility": "evaluator_only_after_candidate_output_is_fixed",
+    "static_comparator_candidates": [
+      "static_component_v1",
+      "path_rules_v1",
+      "lexical_surface_v1"
+    ],
+    "strongest_safe_static_selection": {
+      "eligibility": {
+        "false_safe_critical_max": 0,
+        "critical_recall_min": 1.0
+      },
+      "primary_order": "lowest_family_balanced_excess_selection",
+      "tie_break_1": "lowest_manual_interventions",
+      "tie_break_2": "lexicographic_method_id"
+    },
+    "metric_definitions": {
+      "case_excess_selection": "cardinality(selected_behavior_ids minus ground_truth_behavior_ids)",
+      "family_excess_selection": "mean_case_excess_selection_within_family_across_headline_case_direction_units",
+      "family_balanced_excess_selection": "mean_family_excess_selection_across_headline_families",
+      "headline_excess_reduction": "1 - candidate_family_balanced_excess / strongest_safe_static_family_balanced_excess",
+      "zero_static_excess_policy": "headline_reduction_is_zero_and_differentiation_cannot_pass",
+      "repository_win": "strongest_safe_static_repository_excess_gt_0_and_candidate_reduction_at_least_frozen_repository_threshold",
+      "family_win": "candidate_family_excess_strictly_less_than_strongest_safe_static_family_excess",
+      "critical_recall": "selected_ground_truth_critical_behaviors_divided_by_all_ground_truth_critical_behaviors",
+      "false_safe_critical": "ground_truth_critical_behavior_omitted_while_method_does_not_force_review_or_broader_evidence",
+      "review_burden": "required_widening_or_review_actions_not_requested_subset_size"
+    },
+    "maintenance_accounting": {
+      "common_behavior_catalog_cost_excluded_from_all_methods": true,
+      "method_specific_manual_mapping_entries_counted": true,
+      "candidate_case_specific_exception_counted": true,
+      "candidate_calibration_repair_counted": true,
+      "measured_human_minutes_report_only": true
+    }
+  },
+  "decision_order": [
+    "protocol_integrity",
+    "safety_gate",
+    "auditability_gate",
+    "differentiation_gate",
+    "maintenance_gate",
+    "commercial_interpretation"
+  ],
+  "decision_rules": {
+    "protocol_integrity_failure": "INVALID_EXPERIMENT",
+    "critical_safety_failure": "KILL_OR_NARROW_BIG",
+    "skip_proof_completeness_failure": "FAIL_AUDITABILITY_GATE",
+    "static_pareto_dominance": "KILL_OR_NARROW_BIG",
+    "differentiation_threshold_failure": "NO_DIFFERENTIATION_CLAIM",
+    "all_frozen_gates_pass": "THESIS_SURVIVES_PHASE_8B_ONLY",
+    "passing_does_not_imply": [
+      "production_safety",
+      "general_semantic_recall",
+      "product_market_fit",
+      "customer_validation",
+      "permission_security",
+      "runtime_authorization"
+    ]
+  },
+  "required_first_observation_record": [
+    "protocol_blob_sha",
+    "candidate_blob_sha",
+    "corpus_blob_sha",
+    "gate_b_blob_sha",
+    "input_manifest_digest",
+    "started_at",
+    "completed_at",
+    "attempt_history",
+    "per_case_direction_candidate_outputs",
+    "per_method_raw_outputs",
+    "per_case_direction_scores",
+    "aggregate_scores",
+    "strongest_safe_static_method",
+    "gate_results",
+    "final_phase8b_decision"
+  ]
+}
