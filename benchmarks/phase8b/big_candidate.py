@@ -22,7 +22,8 @@ USED_EDGE_CLASSES = frozenset({"declared_semantic", "static_program", "critical_
 RISK_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 MIN_PREFIX_MATCH = 5
-POLICY_ID = "phase8b_gate_b_frozen_candidate_v1"
+POLICY_ID = "phase8b_gate_c_minimal_big_v1"
+FRESH_CALIBRATION_STATES = frozenset({"fresh", "preregistered_full_run_verified"})
 
 
 @dataclass(frozen=True, order=True)
@@ -37,13 +38,24 @@ class Edge:
             raise ValueError(f"unsupported edge class: {self.edge_class}")
 
 
+@dataclass(frozen=True, order=True)
+class ImportEvidence:
+    module: str
+    provenance: str
+
+
 @dataclass(frozen=True)
 class GraphBuild:
     nodes: tuple[str, ...]
     edges: tuple[Edge, ...]
     changed_nodes: tuple[str, ...]
     unresolved_changed_paths: tuple[str, ...]
+    parse_failed_paths: tuple[str, ...]
     parse_failed_changed_paths: tuple[str, ...]
+    unresolved_local_imports: tuple[str, ...]
+    dynamic_import_uncertainty_sites: tuple[str, ...]
+    python_files_total: int
+    python_files_parsed: int
     graph_digest: str
 
 
@@ -145,16 +157,21 @@ def _module_aliases(path: str) -> tuple[str, ...]:
     return tuple(aliases)
 
 
-def _unique_module_index(paths: Iterable[str]) -> dict[str, str]:
+def _module_candidates(paths: Iterable[str]) -> dict[str, tuple[str, ...]]:
     candidates: dict[str, set[str]] = defaultdict(set)
     for path in paths:
         for alias in _module_aliases(path):
             candidates[alias].add(path)
-    return {
-        alias: next(iter(values))
-        for alias, values in candidates.items()
-        if len(values) == 1
-    }
+    return {alias: tuple(sorted(values)) for alias, values in sorted(candidates.items())}
+
+
+def _local_package_roots(candidates: dict[str, tuple[str, ...]]) -> frozenset[str]:
+    roots: set[str] = set()
+    for alias in candidates:
+        parts = alias.split(".")
+        if len(parts) >= 2:
+            roots.add(parts[0])
+    return frozenset(roots)
 
 
 def _resolve_relative_module(current_path: str, level: int, module: str | None) -> str | None:
@@ -173,15 +190,27 @@ def _resolve_relative_module(current_path: str, level: int, module: str | None) 
     return ".".join(package) if package else None
 
 
-def _resolve_module(module: str | None, module_index: dict[str, str]) -> str | None:
-    if not module:
-        return None
-    if module in module_index:
-        return module_index[module]
-    matches = {path for alias, path in module_index.items() if module.endswith(alias) or alias.endswith(module)}
-    if len(matches) == 1:
-        return next(iter(matches))
-    return None
+def _resolution_probes(module: str) -> tuple[str, ...]:
+    parts = module.split(".")
+    return tuple(".".join(parts[:end]) for end in range(len(parts), 0, -1))
+
+
+def _resolve_module(
+    module: str,
+    candidates: dict[str, tuple[str, ...]],
+    local_roots: frozenset[str],
+) -> tuple[str | None, str]:
+    for probe in _resolution_probes(module):
+        values = candidates.get(probe)
+        if values is None:
+            continue
+        if len(values) == 1:
+            return values[0], "resolved"
+        return None, f"ambiguous_local:{probe}"
+    root = module.split(".", 1)[0]
+    if root in local_roots:
+        return None, f"missing_local:{module}"
+    return None, "external_or_unknown"
 
 
 def _top_level_symbols(tree: ast.AST) -> tuple[str, ...]:
@@ -199,21 +228,57 @@ def _top_level_symbols(tree: ast.AST) -> tuple[str, ...]:
     return tuple(sorted(symbols))
 
 
-def _imported_modules(path: str, tree: ast.AST) -> tuple[str, ...]:
-    modules: set[str] = set()
+def _dynamic_import_target(call: ast.Call) -> tuple[str | None, bool]:
+    is_dynamic_import = False
+    if isinstance(call.func, ast.Name) and call.func.id == "__import__":
+        is_dynamic_import = True
+    elif (
+        isinstance(call.func, ast.Attribute)
+        and call.func.attr == "import_module"
+        and isinstance(call.func.value, ast.Name)
+        and call.func.value.id == "importlib"
+    ):
+        is_dynamic_import = True
+    if not is_dynamic_import:
+        return None, False
+    if not call.args:
+        return None, True
+    first = call.args[0]
+    if isinstance(first, ast.Constant) and isinstance(first.value, str) and first.value:
+        return first.value, True
+    return None, True
+
+
+def _import_evidence(path: str, tree: ast.AST) -> tuple[tuple[ImportEvidence, ...], tuple[str, ...]]:
+    imports: set[ImportEvidence] = set()
+    dynamic_uncertainty: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            modules.update(alias.name for alias in node.names)
+            for alias in node.names:
+                imports.add(ImportEvidence(alias.name, f"python_import:{alias.name}"))
         elif isinstance(node, ast.ImportFrom):
             resolved = _resolve_relative_module(path, node.level, node.module)
             if resolved:
-                modules.add(resolved)
+                imports.add(ImportEvidence(resolved, f"python_import:{resolved}"))
             for alias in node.names:
-                if alias.name == "*":
+                if alias.name == "*" or not resolved:
                     continue
-                if resolved:
-                    modules.add(f"{resolved}.{alias.name}")
-    return tuple(sorted(modules))
+                module = f"{resolved}.{alias.name}"
+                imports.add(ImportEvidence(module, f"python_import:{module}"))
+        elif isinstance(node, ast.Call):
+            target, is_dynamic = _dynamic_import_target(node)
+            if not is_dynamic:
+                continue
+            if target is not None and not target.startswith("."):
+                imports.add(
+                    ImportEvidence(
+                        target,
+                        f"python_dynamic_import_literal:{target}",
+                    )
+                )
+            else:
+                dynamic_uncertainty.add(f"{path}:{getattr(node, 'lineno', 0)}")
+    return tuple(sorted(imports)), tuple(sorted(dynamic_uncertainty))
 
 
 def _semantic_edges(
@@ -243,23 +308,54 @@ def _semantic_edges(
     return edges
 
 
+def _validate_inputs(
+    *,
+    sources: dict[str, str],
+    changed_paths: list[str],
+    behaviors: list[dict[str, Any]],
+) -> None:
+    if not changed_paths or not any(_normalize_path(path) for path in changed_paths):
+        raise ValueError("changed_paths must not be empty")
+
+    normalized_paths = [_normalize_path(path) for path in sources]
+    if len(normalized_paths) != len(set(normalized_paths)):
+        raise ValueError("sources contain duplicate normalized paths")
+
+    behavior_ids: list[str] = []
+    for behavior in behaviors:
+        behavior_id = behavior.get("behavior_id")
+        if not isinstance(behavior_id, str) or not behavior_id:
+            raise ValueError("behavior_id must be a non-empty string")
+        behavior_ids.append(behavior_id)
+        risk = behavior.get("risk")
+        if risk not in RISK_RANK:
+            raise ValueError(f"unsupported behavior risk: {risk!r}")
+    duplicates = sorted({item for item in behavior_ids if behavior_ids.count(item) > 1})
+    if duplicates:
+        raise ValueError(f"duplicate behavior_id: {duplicates[0]}")
+
+
 def build_graph(
     *,
     sources: dict[str, str],
     changed_paths: list[str],
     behaviors: list[dict[str, Any]],
 ) -> GraphBuild:
+    _validate_inputs(sources=sources, changed_paths=changed_paths, behaviors=behaviors)
+
     normalized_sources = {
         _normalize_path(path): text
         for path, text in sources.items()
         if _normalize_path(path).endswith(".py")
     }
     normalized_changed = tuple(sorted({_normalize_path(path) for path in changed_paths}))
-    module_index = _unique_module_index(normalized_sources)
+    module_candidates = _module_candidates(normalized_sources)
+    local_roots = _local_package_roots(module_candidates)
 
     source_symbols: dict[str, tuple[str, ...]] = {}
-    source_imports: dict[str, tuple[str, ...]] = {}
+    source_imports: dict[str, tuple[ImportEvidence, ...]] = {}
     parse_failures: set[str] = set()
+    dynamic_uncertainty_sites: set[str] = set()
     for path, text in sorted(normalized_sources.items()):
         try:
             tree = ast.parse(text, filename=path)
@@ -269,17 +365,24 @@ def build_graph(
             source_imports[path] = ()
             continue
         source_symbols[path] = _top_level_symbols(tree)
-        source_imports[path] = _imported_modules(path, tree)
+        imports, dynamic_uncertainty = _import_evidence(path, tree)
+        source_imports[path] = imports
+        dynamic_uncertainty_sites.update(dynamic_uncertainty)
 
     nodes: set[str] = {_file_node(path) for path in normalized_sources}
     nodes.update(_behavior_node(str(behavior["behavior_id"])) for behavior in behaviors)
     nodes.add("policy:critical")
 
     edges: list[Edge] = []
-    for importer_path, modules in sorted(source_imports.items()):
-        for module in modules:
-            dependency_path = _resolve_module(module, module_index)
-            if dependency_path is None or dependency_path == importer_path:
+    unresolved_local_imports: set[str] = set()
+    for importer_path, imports in sorted(source_imports.items()):
+        for evidence in imports:
+            dependency_path, status = _resolve_module(evidence.module, module_candidates, local_roots)
+            if dependency_path is None:
+                if status.startswith(("ambiguous_local:", "missing_local:")):
+                    unresolved_local_imports.add(f"{importer_path}:{evidence.module}:{status}")
+                continue
+            if dependency_path == importer_path:
                 continue
             # Impact flows from a changed dependency to its consumer.
             edges.append(
@@ -287,7 +390,7 @@ def build_graph(
                     src=_file_node(dependency_path),
                     dst=_file_node(importer_path),
                     edge_class="static_program",
-                    provenance=f"python_import:{module}",
+                    provenance=evidence.provenance,
                 )
             )
 
@@ -322,7 +425,10 @@ def build_graph(
         ],
         "changed_nodes": list(changed_nodes),
         "unresolved_changed_paths": list(unresolved),
+        "parse_failed_paths": sorted(parse_failures),
         "parse_failed_changed_paths": list(parse_failed_changed),
+        "unresolved_local_imports": sorted(unresolved_local_imports),
+        "dynamic_import_uncertainty_sites": sorted(dynamic_uncertainty_sites),
     }
     digest = hashlib.sha256(json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     return GraphBuild(
@@ -330,7 +436,12 @@ def build_graph(
         edges=unique_edges,
         changed_nodes=changed_nodes,
         unresolved_changed_paths=unresolved,
+        parse_failed_paths=tuple(sorted(parse_failures)),
         parse_failed_changed_paths=parse_failed_changed,
+        unresolved_local_imports=tuple(sorted(unresolved_local_imports)),
+        dynamic_import_uncertainty_sites=tuple(sorted(dynamic_uncertainty_sites)),
+        python_files_total=len(normalized_sources),
+        python_files_parsed=len(normalized_sources) - len(parse_failures),
         graph_digest=digest,
     )
 
@@ -364,25 +475,30 @@ def _selected_proof(
     *,
     behavior_id: str,
     path: tuple[Edge, ...] | None,
-    graph_digest: str,
-    policy_selected: bool,
+    graph: GraphBuild,
+    selection_mode: str,
 ) -> dict[str, Any]:
-    if policy_selected:
-        return {
-            "candidate_behavior_node": _behavior_node(behavior_id),
-            "impact_path": ["policy:critical", _behavior_node(behavior_id)],
-            "edge_classes": ["critical_invariant"],
-            "edge_provenance": ["frozen_behavior_catalog:risk=critical"],
-            "graph_digest": graph_digest,
-            "policy_attribution": POLICY_ID,
-        }
-    assert path is not None
+    if selection_mode == "critical_policy":
+        impact_path = ["policy:critical", _behavior_node(behavior_id)]
+        edge_classes = ["critical_invariant"]
+        edge_provenance = ["frozen_behavior_catalog:risk=critical"]
+    elif selection_mode == "uncertainty_widening":
+        impact_path = []
+        edge_classes = []
+        edge_provenance = []
+    else:
+        assert path is not None
+        impact_path = [path[0].src, *(edge.dst for edge in path)] if path else []
+        edge_classes = [edge.edge_class for edge in path]
+        edge_provenance = [edge.provenance for edge in path]
     return {
+        "triggering_change_nodes": list(graph.changed_nodes),
         "candidate_behavior_node": _behavior_node(behavior_id),
-        "impact_path": [path[0].src, *(edge.dst for edge in path)] if path else [],
-        "edge_classes": [edge.edge_class for edge in path],
-        "edge_provenance": [edge.provenance for edge in path],
-        "graph_digest": graph_digest,
+        "selection_mode": selection_mode,
+        "impact_path": impact_path,
+        "edge_classes": edge_classes,
+        "edge_provenance": edge_provenance,
+        "graph_digest": graph.graph_digest,
         "policy_attribution": POLICY_ID,
     }
 
@@ -391,9 +507,11 @@ def _skip_proof(
     *,
     behavior_id: str,
     graph: GraphBuild,
+    paths: dict[str, tuple[Edge, ...]],
     calibration_freshness: str,
     review: bool,
 ) -> dict[str, Any]:
+    reachable_sources = sorted(node for node in paths if node.startswith("source:"))
     return {
         "changed_source_nodes": list(graph.changed_nodes),
         "candidate_behavior_node": _behavior_node(behavior_id),
@@ -403,6 +521,14 @@ def _skip_proof(
         "calibration_freshness": calibration_freshness,
         "policy_attribution": POLICY_ID,
         "graph_digest": graph.graph_digest,
+        "reachable_source_nodes": reachable_sources,
+        "unresolved_local_imports": list(graph.unresolved_local_imports),
+        "dynamic_import_uncertainty_sites": list(graph.dynamic_import_uncertainty_sites),
+        "analysis_scope": {
+            "python_files_total": graph.python_files_total,
+            "python_files_parsed": graph.python_files_parsed,
+            "python_files_parse_failed": len(graph.parse_failed_paths),
+        },
     }
 
 
@@ -416,12 +542,25 @@ def select_with_big(
     graph = build_graph(sources=sources, changed_paths=changed_paths, behaviors=behaviors)
     paths = _shortest_paths(graph)
 
-    review = bool(graph.unresolved_changed_paths or graph.parse_failed_changed_paths)
+    calibration_uncertain = calibration_freshness not in FRESH_CALIBRATION_STATES
+    review = bool(
+        graph.unresolved_changed_paths
+        or graph.parse_failed_changed_paths
+        or graph.unresolved_local_imports
+        or graph.dynamic_import_uncertainty_sites
+        or calibration_uncertain
+    )
     reasons: list[str] = []
     if graph.unresolved_changed_paths:
         reasons.append(f"unresolved_changed_paths={len(graph.unresolved_changed_paths)}")
     if graph.parse_failed_changed_paths:
         reasons.append(f"parse_failed_changed_paths={len(graph.parse_failed_changed_paths)}")
+    if graph.unresolved_local_imports:
+        reasons.append(f"unresolved_local_imports={len(graph.unresolved_local_imports)}")
+    if graph.dynamic_import_uncertainty_sites:
+        reasons.append(f"dynamic_import_uncertainty={len(graph.dynamic_import_uncertainty_sites)}")
+    if calibration_uncertain:
+        reasons.append(f"calibration:{calibration_freshness}")
 
     selected: set[str] = set()
     selected_proofs: dict[str, dict[str, Any]] = {}
@@ -435,21 +574,20 @@ def select_with_big(
             selected_proofs[behavior_id] = _selected_proof(
                 behavior_id=behavior_id,
                 path=None,
-                graph_digest=graph.graph_digest,
-                policy_selected=True,
+                graph=graph,
+                selection_mode="critical_policy",
             )
         elif impact_path is not None:
             selected.add(behavior_id)
             selected_proofs[behavior_id] = _selected_proof(
                 behavior_id=behavior_id,
                 path=impact_path,
-                graph_digest=graph.graph_digest,
-                policy_selected=False,
+                graph=graph,
+                selection_mode="impact_path",
             )
 
     if review:
-        # Fail-safe widening mirrors the frozen benchmark safety policy: ambiguity
-        # may increase evidence or force REVIEW, never justify a smaller suite.
+        # Ambiguity may increase evidence or force REVIEW, never justify a smaller suite.
         for behavior in behaviors:
             if not _risk_at_least(behavior, "high"):
                 continue
@@ -457,20 +595,19 @@ def select_with_big(
             if behavior_id in selected:
                 continue
             selected.add(behavior_id)
-            selected_proofs[behavior_id] = {
-                "candidate_behavior_node": _behavior_node(behavior_id),
-                "impact_path": [],
-                "edge_classes": [],
-                "edge_provenance": [],
-                "graph_digest": graph.graph_digest,
-                "policy_attribution": f"{POLICY_ID}:uncertainty_widen_high_critical",
-            }
+            selected_proofs[behavior_id] = _selected_proof(
+                behavior_id=behavior_id,
+                path=None,
+                graph=graph,
+                selection_mode="uncertainty_widening",
+            )
         reasons.append("uncertainty:widen_high_critical")
 
     skip_proofs = {
         str(behavior["behavior_id"]): _skip_proof(
             behavior_id=str(behavior["behavior_id"]),
             graph=graph,
+            paths=paths,
             calibration_freshness=calibration_freshness,
             review=review,
         )
