@@ -9,7 +9,13 @@ from pathlib import Path
 from typing import Any
 
 from benchmarks.phase8b.harness import candidate_case_envelope, is_candidate_source_path
-from benchmarks.phase8b.materialize_gate_d_inputs import DIFF_POLICY, DIRECTIONS, PAYLOAD_KEYS, SOURCE_POLICY
+from benchmarks.phase8b.materialize_gate_d_inputs import (
+    DIFF_POLICY,
+    DIRECTIONS,
+    MATERIALIZER_PATH,
+    PAYLOAD_KEYS,
+    SOURCE_POLICY,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 PHASE = ROOT / "benchmarks" / "phase8b"
@@ -90,6 +96,11 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
 
     _expect(findings, manifest.get("protocol_blob_sha") == _git_blob_sha(GATE_D_PATH), "protocol blob mismatch")
     _expect(findings, manifest.get("corpus_blob_sha") == _git_blob_sha(CORPUS_PATH), "corpus blob mismatch")
+    _expect(
+        findings,
+        manifest.get("materializer_blob_sha") == _git_blob_sha(MATERIALIZER_PATH),
+        "materializer blob mismatch",
+    )
     _expect(
         findings,
         manifest.get("candidate_blob_sha") == gate_d.get("frozen_inputs", {}).get("candidate", {}).get("git_blob_sha"),
