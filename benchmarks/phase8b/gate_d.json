@@ -3,7 +3,7 @@
   "phase": "8B",
   "gate": "D",
   "protocol_status": "draft",
-  "observation_status": "unobserved",
+  "observation_state_at_protocol_creation": "unobserved",
   "created_at": "2026-09-04",
   "frozen_at": null,
   "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
@@ -86,7 +86,7 @@
     }
   },
   "D1_input_materialization": {
-    "status": "not_materialized",
+    "state_at_protocol_creation": "not_materialized",
     "candidate_execution_forbidden": true,
     "evaluator_network_allowed": true,
     "fetch_policy": "pinned_upstream_repository_and_exact_base_head_sha_only",
