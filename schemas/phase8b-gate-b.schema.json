@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TensorScholar/proofdiff/schemas/phase8b-gate-b.schema.json",
+  "title": "ProofDiff Phase 8B Gate B Baseline and Scoring Preregistration",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "phase",
+    "gate",
+    "gate_status",
+    "created_at",
+    "frozen_at",
+    "source_of_truth_issue",
+    "corpus_anchor",
+    "artifacts",
+    "experimental_unit",
+    "anti_leakage",
+    "methods",
+    "candidate_edge_classes",
+    "scoring",
+    "maintenance_ledger",
+    "kill_rules"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "phase": {"const": "8B"},
+    "gate": {"const": "B"},
+    "gate_status": {"enum": ["draft", "frozen", "amended"]},
+    "created_at": {"type": "string", "format": "date"},
+    "frozen_at": {"type": ["string", "null"], "format": "date-time"},
+    "source_of_truth_issue": {"type": "string", "format": "uri"},
+    "corpus_anchor": {
+      "type": "object",
+      "required": ["repository", "path", "git_blob_sha", "provenance_commit_sha"],
+      "properties": {
+        "repository": {"const": "TensorScholar/proofdiff"},
+        "path": {"const": "benchmarks/phase8b/corpus.json"},
+        "git_blob_sha": {"$ref": "#/$defs/sha"},
+        "provenance_commit_sha": {"$ref": "#/$defs/sha"}
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["harness", "methods", "static_rules"],
+      "properties": {
+        "harness": {"const": "benchmarks/phase8b/harness.py"},
+        "methods": {"const": "benchmarks/phase8b/methods.py"},
+        "static_rules": {"const": "benchmarks/phase8b/static_rules.json"}
+      },
+      "additionalProperties": false
+    },
+    "experimental_unit": {
+      "type": "object",
+      "required": [
+        "primary_arm",
+        "controls_in_headline",
+        "family_stratified",
+        "directions",
+        "review_burden_policy"
+      ],
+      "properties": {
+        "primary_arm": {"const": "qualified_historical"},
+        "controls_in_headline": {"const": false},
+        "family_stratified": {"const": true},
+        "directions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {"enum": ["forward", "reverse"]}
+        },
+        "review_burden_policy": {"const": "count_required_widening_not_requested_subset"}
+      },
+      "additionalProperties": false
+    },
+    "anti_leakage": {
+      "type": "object",
+      "required": [
+        "candidate_network_access",
+        "candidate_benchmark_repo_access",
+        "candidate_git_metadata_access",
+        "candidate_visible",
+        "evaluator_only",
+        "forbidden_case_prose",
+        "source_snapshot_exclusions",
+        "behavior_universe_derivation"
+      ],
+      "properties": {
+        "candidate_network_access": {"const": false},
+        "candidate_benchmark_repo_access": {"const": false},
+        "candidate_git_metadata_access": {"const": false},
+        "candidate_visible": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "evaluator_only": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "forbidden_case_prose": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "source_snapshot_exclusions": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "behavior_universe_derivation": {
+          "type": "object",
+          "required": [
+            "scope",
+            "source_field",
+            "stable_id",
+            "case_association_removed",
+            "deduplicate_normalized_text"
+          ],
+          "properties": {
+            "scope": {"const": "repository_union"},
+            "source_field": {"const": "protected_invariants"},
+            "stable_id": {"const": "sha256(repo + NUL + normalized_invariant_utf8)[:20]"},
+            "case_association_removed": {"const": true},
+            "deduplicate_normalized_text": {"const": true}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "methods": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {"$ref": "#/$defs/method"}
+    },
+    "candidate_edge_classes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "declared_semantic",
+          "static_program",
+          "dynamic_trace",
+          "historical_evidence",
+          "critical_invariant"
+        ]
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["safety", "selectivity", "auditability"],
+      "properties": {
+        "safety": {
+          "type": "object",
+          "required": [
+            "false_safe_critical_max",
+            "critical_recall_min",
+            "high_critical_recall_delta_vs_strongest_safe_static_min"
+          ],
+          "properties": {
+            "false_safe_critical_max": {"const": 0},
+            "critical_recall_min": {"const": 1.0},
+            "high_critical_recall_delta_vs_strongest_safe_static_min": {"const": 0.0}
+          },
+          "additionalProperties": false
+        },
+        "selectivity": {
+          "type": "object",
+          "required": [
+            "primary_metric",
+            "headline_excess_reduction_vs_strongest_safe_static_min",
+            "minimum_repository_wins",
+            "repository_win_excess_reduction_min",
+            "minimum_family_wins",
+            "family_balanced"
+          ],
+          "properties": {
+            "primary_metric": {"const": "excess_selection"},
+            "headline_excess_reduction_vs_strongest_safe_static_min": {"const": 0.25},
+            "minimum_repository_wins": {"const": 3},
+            "repository_win_excess_reduction_min": {"const": 0.15},
+            "minimum_family_wins": {"const": 5},
+            "family_balanced": {"const": true}
+          },
+          "additionalProperties": false
+        },
+        "auditability": {
+          "type": "object",
+          "required": [
+            "skip_proof_completeness_min",
+            "required_skip_proof_fields",
+            "invalid_proof_policy"
+          ],
+          "properties": {
+            "skip_proof_completeness_min": {"const": 1.0},
+            "required_skip_proof_fields": {
+              "type": "array",
+              "minItems": 7,
+              "maxItems": 7,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "changed_source_nodes",
+                  "candidate_behavior_node",
+                  "edge_classes_considered",
+                  "no_path_reason",
+                  "uncertainty_state",
+                  "calibration_freshness",
+                  "policy_attribution"
+                ]
+              }
+            },
+            "invalid_proof_policy": {"const": "widen_or_review"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "maintenance_ledger": {
+      "type": "object",
+      "required": [
+        "primary_metric",
+        "candidate_vs_strongest_safe_static_max_ratio",
+        "counted_actions",
+        "time_policy",
+        "secondary_metrics"
+      ],
+      "properties": {
+        "primary_metric": {"const": "manual_interventions"},
+        "candidate_vs_strongest_safe_static_max_ratio": {"const": 1.0},
+        "counted_actions": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "time_policy": {"const": "report_only_if_measured"},
+        "secondary_metrics": {"$ref": "#/$defs/nonEmptyUniqueStrings"}
+      },
+      "additionalProperties": false
+    },
+    "kill_rules": {
+      "type": "object",
+      "required": [
+        "safety_failure",
+        "static_pareto_dominance",
+        "differentiation_threshold_failure",
+        "post_observation_tuning"
+      ],
+      "properties": {
+        "safety_failure": {"const": "kill_or_narrow_big"},
+        "static_pareto_dominance": {"const": "kill_or_narrow_big"},
+        "differentiation_threshold_failure": {"const": "no_differentiation_claim"},
+        "post_observation_tuning": {"const": "invalid_experiment"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "nonEmptyUniqueStrings": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 512}
+    },
+    "method": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "implementation_ref",
+        "visible_inputs",
+        "unknown_policy",
+        "critical_policy",
+        "case_specific_rules_forbidden"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "full_suite",
+            "static_component_v1",
+            "path_rules_v1",
+            "lexical_surface_v1",
+            "proofdiff_v0_1_0"
+          ]
+        },
+        "kind": {"enum": ["reference", "static", "released"]},
+        "implementation_ref": {"type": "string", "minLength": 1, "maxLength": 512},
+        "visible_inputs": {"$ref": "#/$defs/nonEmptyUniqueStrings"},
+        "unknown_policy": {"enum": ["full_suite", "widen_high_critical_smoke", "widen_or_review"]},
+        "critical_policy": {"enum": ["all_critical", "released_selector", "not_applicable"]},
+        "case_specific_rules_forbidden": {"const": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,198 @@
+{
+  "schema_version": "1.0",
+  "phase": "8B",
+  "gate": "B",
+  "gate_status": "frozen",
+  "created_at": "2026-09-04",
+  "frozen_at": "2026-09-04T11:46:47Z",
+  "source_of_truth_issue": "https://github.com/TensorScholar/proofdiff/issues/18",
+  "corpus_anchor": {
+    "repository": "TensorScholar/proofdiff",
+    "path": "benchmarks/phase8b/corpus.json",
+    "git_blob_sha": "8bcaa8577f1c656b16dfd3e2ab51ba119dabce7b",
+    "provenance_commit_sha": "db7058cde0cf2d4dc0d8c96a70e1cb00b15924b0"
+  },
+  "artifacts": {
+    "harness": "benchmarks/phase8b/harness.py",
+    "methods": "benchmarks/phase8b/methods.py",
+    "static_rules": "benchmarks/phase8b/static_rules.json"
+  },
+  "experimental_unit": {
+    "primary_arm": "qualified_historical",
+    "controls_in_headline": false,
+    "family_stratified": true,
+    "directions": ["forward", "reverse"],
+    "review_burden_policy": "count_required_widening_not_requested_subset"
+  },
+  "anti_leakage": {
+    "candidate_network_access": false,
+    "candidate_benchmark_repo_access": false,
+    "candidate_git_metadata_access": false,
+    "candidate_visible": [
+      "repo",
+      "base_sha",
+      "head_sha",
+      "sanitized_baseline_source",
+      "sanitized_candidate_source",
+      "production_diff",
+      "behavior_catalog",
+      "method_config"
+    ],
+    "evaluator_only": [
+      "case_id",
+      "family_id",
+      "criticality",
+      "confounding_risk",
+      "protected_invariants",
+      "oracle",
+      "ground_truth_behavior_ids",
+      "source_url",
+      "pr_number",
+      "upstream_reference",
+      "discrimination_reason",
+      "notes",
+      "case_title"
+    ],
+    "forbidden_case_prose": [
+      "source_url",
+      "upstream_reference",
+      "title",
+      "discrimination_reason",
+      "notes",
+      "oracle.paths",
+      "oracle.tests",
+      "oracle.notes"
+    ],
+    "source_snapshot_exclusions": [
+      ".git/**",
+      ".github/**",
+      "docs/**",
+      "documentation/**",
+      "examples/**",
+      "benchmarks/**",
+      "test/**",
+      "tests/**",
+      "**/test/**",
+      "**/tests/**",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/*.snap",
+      "CHANGELOG*",
+      "RELEASE*"
+    ],
+    "behavior_universe_derivation": {
+      "scope": "repository_union",
+      "source_field": "protected_invariants",
+      "stable_id": "sha256(repo + NUL + normalized_invariant_utf8)[:20]",
+      "case_association_removed": true,
+      "deduplicate_normalized_text": true
+    }
+  },
+  "methods": [
+    {
+      "id": "full_suite",
+      "kind": "reference",
+      "implementation_ref": "benchmarks/phase8b/methods.py#full_suite",
+      "visible_inputs": ["behavior_catalog"],
+      "unknown_policy": "full_suite",
+      "critical_policy": "not_applicable",
+      "case_specific_rules_forbidden": true
+    },
+    {
+      "id": "static_component_v1",
+      "kind": "static",
+      "implementation_ref": "benchmarks/phase8b/methods.py#static_component_v1",
+      "visible_inputs": ["production_diff", "behavior_catalog", "method_config"],
+      "unknown_policy": "widen_or_review",
+      "critical_policy": "all_critical",
+      "case_specific_rules_forbidden": true
+    },
+    {
+      "id": "path_rules_v1",
+      "kind": "static",
+      "implementation_ref": "benchmarks/phase8b/methods.py#path_rules_v1",
+      "visible_inputs": ["production_diff", "behavior_catalog", "method_config"],
+      "unknown_policy": "widen_or_review",
+      "critical_policy": "all_critical",
+      "case_specific_rules_forbidden": true
+    },
+    {
+      "id": "lexical_surface_v1",
+      "kind": "static",
+      "implementation_ref": "benchmarks/phase8b/methods.py#lexical_surface_v1",
+      "visible_inputs": ["production_diff", "behavior_catalog", "method_config"],
+      "unknown_policy": "widen_or_review",
+      "critical_policy": "all_critical",
+      "case_specific_rules_forbidden": true
+    },
+    {
+      "id": "proofdiff_v0_1_0",
+      "kind": "released",
+      "implementation_ref": "src/proofdiff/engine/selector.py#select_contracts via benchmarks/phase8b/methods.py#proofdiff_v0_1_0",
+      "visible_inputs": ["production_diff", "behavior_catalog", "method_config"],
+      "unknown_policy": "widen_high_critical_smoke",
+      "critical_policy": "released_selector",
+      "case_specific_rules_forbidden": true
+    }
+  ],
+  "candidate_edge_classes": [
+    "declared_semantic",
+    "static_program",
+    "dynamic_trace",
+    "historical_evidence",
+    "critical_invariant"
+  ],
+  "scoring": {
+    "safety": {
+      "false_safe_critical_max": 0,
+      "critical_recall_min": 1.0,
+      "high_critical_recall_delta_vs_strongest_safe_static_min": 0.0
+    },
+    "selectivity": {
+      "primary_metric": "excess_selection",
+      "headline_excess_reduction_vs_strongest_safe_static_min": 0.25,
+      "minimum_repository_wins": 3,
+      "repository_win_excess_reduction_min": 0.15,
+      "minimum_family_wins": 5,
+      "family_balanced": true
+    },
+    "auditability": {
+      "skip_proof_completeness_min": 1.0,
+      "required_skip_proof_fields": [
+        "changed_source_nodes",
+        "candidate_behavior_node",
+        "edge_classes_considered",
+        "no_path_reason",
+        "uncertainty_state",
+        "calibration_freshness",
+        "policy_attribution"
+      ],
+      "invalid_proof_policy": "widen_or_review"
+    }
+  },
+  "maintenance_ledger": {
+    "primary_metric": "manual_interventions",
+    "candidate_vs_strongest_safe_static_max_ratio": 1.0,
+    "counted_actions": [
+      "initial_manual_mapping_entry",
+      "case_specific_exception",
+      "calibration_repair",
+      "stale_mapping_repair",
+      "human_approval_of_mapping_change"
+    ],
+    "time_policy": "report_only_if_measured",
+    "secondary_metrics": [
+      "manual_mapping_entries",
+      "machine_derived_edges",
+      "rule_or_graph_bytes",
+      "calibration_updates",
+      "review_actions"
+    ]
+  },
+  "kill_rules": {
+    "safety_failure": "kill_or_narrow_big",
+    "static_pareto_dominance": "kill_or_narrow_big",
+    "differentiation_threshold_failure": "no_differentiation_claim",
+    "post_observation_tuning": "invalid_experiment"
+  }
+}
