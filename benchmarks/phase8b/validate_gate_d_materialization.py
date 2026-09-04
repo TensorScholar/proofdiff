@@ -226,7 +226,11 @@ def validate_materialization(root: Path) -> list[str]:
 
     _expect(findings, manifest.get("case_count") == len(cases), "D1 case_count mismatch")
     _expect(findings, manifest.get("run_count") == len(expected_units), "D1 run_count mismatch")
-    _expect(findings, manifest.get("repository_count") == len({str(case["repo"]) for case in cases}), "D1 repository_count mismatch")
+    _expect(
+        findings,
+        manifest.get("repository_count") == len({str(case["repo"]) for case in cases}),
+        "D1 repository_count mismatch",
+    )
 
     raw_runs = manifest.get("runs")
     if not isinstance(raw_runs, list):
@@ -383,7 +387,9 @@ def validate_materialization(root: Path) -> list[str]:
     if not isinstance(raw_inventory, list):
         findings.append("manifest.snapshot_inventory must be a list")
         raw_inventory = []
-    expected_snapshots = {(str(case["repo"]), str(sha)) for case in cases for sha in (case["base_sha"], case["head_sha"])}
+    expected_snapshots = {
+        (str(case["repo"]), str(sha)) for case in cases for sha in (case["base_sha"], case["head_sha"])
+    }
     observed_snapshots: set[tuple[str, str]] = set()
     for index, item in enumerate(raw_inventory):
         label = f"manifest.snapshot_inventory[{index}]"
