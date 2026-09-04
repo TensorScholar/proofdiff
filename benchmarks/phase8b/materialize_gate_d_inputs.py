@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 import tokenize
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from benchmarks.phase8b.harness import (
@@ -24,7 +24,10 @@ CORPUS_PATH = PHASE / "corpus.json"
 GATE_D_PATH = PHASE / "gate_d.json"
 MATERIALIZER_PATH = PHASE / "materialize_gate_d_inputs.py"
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+RUN_KEY_RE = re.compile(r"^[0-9a-f]{24}$")
 DIRECTIONS = ("forward", "reverse")
+MANIFEST_NAME = "gate_d_input_manifest.json"
+PAYLOAD_DIR_NAME = "payloads"
 PAYLOAD_KEYS = {
     "repo",
     "base_sha",
@@ -37,6 +40,7 @@ PAYLOAD_KEYS = {
 }
 SOURCE_POLICY = "candidate_relevant_utf8_python_production_files_only_v1"
 DIFF_POLICY = "git_diff_no_ext_no_color_no_renames_full_index_unified3_sanitized_paths_v1"
+BUNDLE_FORMAT = "canonical_candidate_payload_json_v1"
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -190,7 +194,30 @@ def _payload(
     return payload
 
 
-def materialize(*, work_root: Path) -> dict[str, Any]:
+def _payload_relpath(run_key: str, direction: str) -> str:
+    if not RUN_KEY_RE.fullmatch(run_key):
+        raise ValueError(f"invalid opaque run key: {run_key!r}")
+    if direction not in DIRECTIONS:
+        raise ValueError(f"unsupported direction: {direction!r}")
+    return str(PurePosixPath(PAYLOAD_DIR_NAME) / f"{run_key}.{direction}.json")
+
+
+def _write_payload(*, bundle_dir: Path, run_key: str, direction: str, payload: dict[str, Any]) -> dict[str, Any]:
+    relpath = _payload_relpath(run_key, direction)
+    target = bundle_dir / relpath
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        raise ValueError(f"duplicate payload target: {relpath}")
+    data = _canonical_bytes(payload)
+    target.write_bytes(data)
+    return {
+        "payload_relpath": relpath,
+        "candidate_payload_digest": _sha256(data),
+        "candidate_payload_bytes": len(data),
+    }
+
+
+def materialize(*, work_root: Path, bundle_dir: Path) -> dict[str, Any]:
     corpus = _load_json(CORPUS_PATH)
     gate_d = _load_json(GATE_D_PATH)
     if gate_d.get("protocol_status") != "frozen":
@@ -210,6 +237,7 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
         repo_shas.setdefault(repo, set()).update({str(case["base_sha"]), str(case["head_sha"])})
 
     work_root.mkdir(parents=True, exist_ok=False)
+    bundle_dir.mkdir(parents=True, exist_ok=False)
     repo_dirs = {
         repo: _prepare_repo(repo=repo, shas=shas, work_root=work_root) for repo, shas in sorted(repo_shas.items())
     }
@@ -250,6 +278,12 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
                     behavior_catalog=catalog,
                     calibration_freshness=calibration_freshness,
                 )
+                payload_record = _write_payload(
+                    bundle_dir=bundle_dir,
+                    run_key=run_key,
+                    direction=direction,
+                    payload=payload,
+                )
                 rows.append(
                     {
                         "case_id": case.get("case_id"),
@@ -268,7 +302,7 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
                         "production_diff_digest": _sha256(diff.encode("utf-8")),
                         "production_diff_bytes": len(diff.encode("utf-8")),
                         "candidate_payload_top_level_keys": sorted(payload),
-                        "candidate_payload_digest": _sha256_json(payload),
+                        **payload_record,
                         "leakage_assertion": "passed",
                     }
                 )
@@ -276,12 +310,20 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
                 failures.append(f"{case.get('case_id')}:{direction}:{type(exc).__name__}:{exc}")
 
     ordered_rows = sorted(rows, key=lambda row: (str(row["run_key"]), str(row["direction"])))
+    payload_index = [
+        {
+            "path": row["payload_relpath"],
+            "sha256": row["candidate_payload_digest"],
+            "bytes": row["candidate_payload_bytes"],
+        }
+        for row in ordered_rows
+    ]
     payload_set = [
         {"run_key": row["run_key"], "direction": row["direction"], "payload_digest": row["candidate_payload_digest"]}
         for row in ordered_rows
     ]
     core = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "phase": "8B",
         "gate": "D",
         "subgate": "D1",
@@ -294,11 +336,15 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
         "calibration_freshness": calibration_freshness,
         "source_snapshot_policy": SOURCE_POLICY,
         "production_diff_policy": DIFF_POLICY,
+        "bundle_format": BUNDLE_FORMAT,
         "candidate_payload_keys": sorted(PAYLOAD_KEYS),
         "candidate_imported_during_materialization": any(name.endswith("big_candidate") for name in sys.modules),
         "candidate_execution_permitted": False,
         "evaluation_case_count": len(cases),
         "case_direction_count": len(ordered_rows),
+        "payload_file_count": len(payload_index),
+        "payload_file_index": payload_index,
+        "candidate_payload_bundle_digest": _sha256_json(payload_index),
         "candidate_visible_payload_set_digest": _sha256_json(payload_set),
         "rows": ordered_rows,
         "materialization_failures": sorted(failures),
@@ -311,15 +357,16 @@ def materialize(*, work_root: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--work-dir", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--bundle-dir", type=Path, required=True)
     args = parser.parse_args()
 
-    manifest = materialize(work_root=args.work_dir)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    manifest = materialize(work_root=args.work_dir, bundle_dir=args.bundle_dir)
+    manifest_path = args.bundle_dir / MANIFEST_NAME
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if manifest["materialization_failures"]:
         raise SystemExit("Gate D1 materialization blocked; see manifest failures")
     print(f"Gate D1 materialized {manifest['case_direction_count']} case-directions")
+    print(f"payload_bundle_digest={manifest['candidate_payload_bundle_digest']}")
     print(f"input_manifest_digest={manifest['input_manifest_digest']}")
     return 0
 
