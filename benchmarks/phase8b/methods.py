@@ -53,19 +53,11 @@ def _risk_at_least(behavior: dict[str, Any], threshold: str) -> bool:
 
 
 def _critical_ids(behaviors: list[dict[str, Any]]) -> set[str]:
-    return {
-        str(behavior["behavior_id"])
-        for behavior in behaviors
-        if str(behavior.get("risk")) == "critical"
-    }
+    return {str(behavior["behavior_id"]) for behavior in behaviors if str(behavior.get("risk")) == "critical"}
 
 
 def _high_critical_ids(behaviors: list[dict[str, Any]]) -> set[str]:
-    return {
-        str(behavior["behavior_id"])
-        for behavior in behaviors
-        if _risk_at_least(behavior, "high")
-    }
+    return {str(behavior["behavior_id"]) for behavior in behaviors if _risk_at_least(behavior, "high")}
 
 
 def _component_tags(repo: str, path: str, rules: dict[str, Any]) -> set[str]:
@@ -240,9 +232,7 @@ def proofdiff_v0_1_0(
             risk=_risk(str(behavior.get("risk", "medium"))),
             tags=tuple(sorted(str(tag) for tag in behavior.get("surface_tags", []))),
             always_run=False,
-            coverage=ContractCoverage(
-                capabilities=tuple(sorted(str(tag) for tag in behavior.get("surface_tags", [])))
-            ),
+            coverage=ContractCoverage(capabilities=tuple(sorted(str(tag) for tag in behavior.get("surface_tags", [])))),
             expectations=Expectations(),
             source="phase8b-derived-behavior-catalog",
         )
