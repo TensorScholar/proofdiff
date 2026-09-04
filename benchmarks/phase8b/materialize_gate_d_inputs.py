@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PHASE = ROOT / "benchmarks" / "phase8b"
 CORPUS_PATH = PHASE / "corpus.json"
 GATE_D_PATH = PHASE / "gate_d.json"
+HARNESS_PATH = PHASE / "harness.py"
 MATERIALIZER_PATH = PHASE / "materialize_gate_d_inputs.py"
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 RUN_KEY_RE = re.compile(r"^[0-9a-f]{24}$")
@@ -121,9 +122,9 @@ def _prepare_repo(*, repo: str, shas: set[str], work_root: Path) -> Path:
     _git(repo_dir, "remote", "add", "origin", f"https://github.com/{repo}.git")
 
     # Fetch every frozen commit for one repository in a single shallow pack.
-    # Deliberately do not use --filter=blob:none: D1 needs the production source
-    # blobs, and lazy promisor fetches turn deterministic snapshotting into an
-    # N+1 network operation with poor timeout behavior.
+    # Deliberately avoid blob filtering: D1 needs the production source blobs,
+    # and lazy promisor fetches turn deterministic snapshotting into an N+1
+    # network operation with poor timeout behavior.
     _git(
         repo_dir,
         "fetch",
@@ -361,6 +362,7 @@ def materialize(*, work_root: Path, bundle_dir: Path) -> dict[str, Any]:
         "materialization_status": "materialized" if not failures else "blocked",
         "protocol_blob_sha": _git_blob_sha(GATE_D_PATH),
         "corpus_blob_sha": _git_blob_sha(CORPUS_PATH),
+        "harness_blob_sha": _git_blob_sha(HARNESS_PATH),
         "materializer_blob_sha": _git_blob_sha(MATERIALIZER_PATH),
         "candidate_id": gate_d["frozen_inputs"]["candidate"]["id"],
         "candidate_blob_sha": gate_d["frozen_inputs"]["candidate"]["git_blob_sha"],
