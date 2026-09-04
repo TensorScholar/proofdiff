@@ -343,11 +343,7 @@ def build_graph(
 ) -> GraphBuild:
     _validate_inputs(sources=sources, changed_paths=changed_paths, behaviors=behaviors)
 
-    normalized_sources = {
-        _normalize_path(path): text
-        for path, text in sources.items()
-        if _normalize_path(path).endswith(".py")
-    }
+    normalized_sources = {_normalize_path(path): text for path, text in sources.items() if _normalize_path(path).endswith(".py")}
     normalized_changed = tuple(sorted({_normalize_path(path) for path in changed_paths}))
     module_candidates = _module_candidates(normalized_sources)
     local_roots = _local_package_roots(module_candidates)
