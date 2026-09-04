@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
     paths:
+      - "benchmarks/phase8b/corpus.json"
+      - "benchmarks/phase8b/gate_d.json"
+      - "benchmarks/phase8b/harness.py"
+      - "benchmarks/phase8b/big_candidate.py"
       - "benchmarks/phase8b/materialize_gate_d_inputs.py"
       - "benchmarks/phase8b/validate_gate_d_inputs.py"
       - "tests/test_phase8b_gate_d_materialization.py"
