@@ -60,7 +60,9 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     _expect(findings, manifest.get("subgate") == "D1", "subgate must be D1")
     _expect(findings, manifest.get("materialization_status") == "materialized", "D1 must be fully materialized")
     _expect(findings, manifest.get("materialization_failures") == [], "D1 manifest contains materialization failures")
-    _expect(findings, manifest.get("candidate_execution_permitted") is False, "candidate execution must remain forbidden")
+    _expect(
+        findings, manifest.get("candidate_execution_permitted") is False, "candidate execution must remain forbidden"
+    )
     _expect(
         findings,
         manifest.get("candidate_imported_during_materialization") is False,
@@ -70,12 +72,16 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     execution = gate_d.get("execution_design", {})
     _expect(
         findings,
-        manifest.get("calibration_freshness") == execution.get("candidate_calibration_freshness") == "not_yet_calibrated",
+        manifest.get("calibration_freshness")
+        == execution.get("candidate_calibration_freshness")
+        == "not_yet_calibrated",
         "D1 must preserve the frozen cold-start calibration state",
     )
     _expect(findings, manifest.get("source_snapshot_policy") == SOURCE_POLICY, "source snapshot policy drifted")
     _expect(findings, manifest.get("production_diff_policy") == DIFF_POLICY, "production diff policy drifted")
-    _expect(findings, manifest.get("candidate_payload_keys") == sorted(PAYLOAD_KEYS), "candidate payload key set drifted")
+    _expect(
+        findings, manifest.get("candidate_payload_keys") == sorted(PAYLOAD_KEYS), "candidate payload key set drifted"
+    )
     _expect(
         findings,
         manifest.get("candidate_payload_keys") == sorted(execution.get("candidate_visible_fields", [])),
@@ -106,7 +112,9 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     if not isinstance(rows, list):
         return findings + ["rows must be a list"]
     _expect(findings, manifest.get("case_direction_count") == len(rows), "case-direction count mismatch")
-    _expect(findings, len(rows) == len(expected_cases) * len(DIRECTIONS), "each evaluation case must have both directions")
+    _expect(
+        findings, len(rows) == len(expected_cases) * len(DIRECTIONS), "each evaluation case must have both directions"
+    )
 
     seen: set[tuple[str, str]] = set()
     by_case: dict[str, set[str]] = defaultdict(set)
@@ -143,10 +151,14 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
             f"{case_id}:{direction}: run_key mismatch",
         )
         _expect(findings, row.get("arm") == case.get("arm"), f"{case_id}:{direction}: arm mismatch")
-        _expect(findings, row.get("eligibility") == case.get("eligibility"), f"{case_id}:{direction}: eligibility mismatch")
+        _expect(
+            findings, row.get("eligibility") == case.get("eligibility"), f"{case_id}:{direction}: eligibility mismatch"
+        )
         _expect(findings, row.get("family_id") == case.get("family_id"), f"{case_id}:{direction}: family mismatch")
         _expect(findings, row.get("baseline_sha") == expected_baseline, f"{case_id}:{direction}: baseline SHA mismatch")
-        _expect(findings, row.get("candidate_sha") == expected_candidate, f"{case_id}:{direction}: candidate SHA mismatch")
+        _expect(
+            findings, row.get("candidate_sha") == expected_candidate, f"{case_id}:{direction}: candidate SHA mismatch"
+        )
         _expect(
             findings,
             row.get("candidate_payload_top_level_keys") == sorted(PAYLOAD_KEYS),
@@ -158,7 +170,11 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
         if not isinstance(changed_paths, list):
             findings.append(f"{case_id}:{direction}: changed_paths must be a list")
         else:
-            _expect(findings, changed_paths == sorted(set(changed_paths)), f"{case_id}:{direction}: changed paths not canonical")
+            _expect(
+                findings,
+                changed_paths == sorted(set(changed_paths)),
+                f"{case_id}:{direction}: changed paths not canonical",
+            )
             for path in changed_paths:
                 _expect(
                     findings,
@@ -179,7 +195,8 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
                 continue
             _expect(
                 findings,
-                isinstance(source.get("snapshot_digest"), str) and bool(HEX64.fullmatch(str(source.get("snapshot_digest")))),
+                isinstance(source.get("snapshot_digest"), str)
+                and bool(HEX64.fullmatch(str(source.get("snapshot_digest")))),
                 f"{case_id}:{direction}: invalid {source_field} digest",
             )
             _expect(
@@ -212,7 +229,9 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     core.pop("input_manifest_digest", None)
     _expect(
         findings,
-        isinstance(manifest_digest, str) and bool(HEX64.fullmatch(manifest_digest)) and manifest_digest == _sha256_json(core),
+        isinstance(manifest_digest, str)
+        and bool(HEX64.fullmatch(manifest_digest))
+        and manifest_digest == _sha256_json(core),
         "input manifest digest mismatch",
     )
     return findings
