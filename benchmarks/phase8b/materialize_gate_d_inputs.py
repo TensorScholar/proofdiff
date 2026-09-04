@@ -317,9 +317,7 @@ def materialize(*, output_root: Path, cache_root: Path) -> dict[str, Any]:
         _safe_repo_slug(repo)
         required_revisions[repo].update({_validate_sha(str(case["base_sha"])), _validate_sha(str(case["head_sha"]))})
 
-    repo_dirs = {
-        repo: _prepare_repo(cache_root, repo, shas) for repo, shas in sorted(required_revisions.items())
-    }
+    repo_dirs = {repo: _prepare_repo(cache_root, repo, shas) for repo, shas in sorted(required_revisions.items())}
 
     snapshot_cache: dict[tuple[str, str], dict[str, Any]] = {}
     snapshot_refs: dict[tuple[str, str], str] = {}
