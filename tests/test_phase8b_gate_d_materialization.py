@@ -175,9 +175,7 @@ def _synthetic_valid_bundle(tmp_path: Path) -> tuple[dict[str, Any], Path]:
         run_key = d1.candidate_case_envelope(case)["run_key"]
         for direction in d1.DIRECTIONS:
             baseline, candidate = (
-                (case["base_sha"], case["head_sha"])
-                if direction == "forward"
-                else (case["head_sha"], case["base_sha"])
+                (case["base_sha"], case["head_sha"]) if direction == "forward" else (case["head_sha"], case["base_sha"])
             )
             payload = _canonical_payload(repo=case["repo"], baseline_sha=baseline, candidate_sha=candidate)
             payload_bytes = d1._canonical_bytes(payload)
