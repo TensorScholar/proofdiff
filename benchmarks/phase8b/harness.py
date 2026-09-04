@@ -133,9 +133,7 @@ def is_candidate_source_path(path: str) -> bool:
         return False
     if name.startswith("test_") or name.endswith("_test.py") or name.endswith(".snap"):
         return False
-    if re.match(r"^(changelog|release)(\.|-|_|$)", name, flags=re.IGNORECASE):
-        return False
-    return True
+    return re.match(r"^(changelog|release)(\.|-|_|$)", name, flags=re.IGNORECASE) is None
 
 
 def _walk_keys(value: Any) -> list[str]:
