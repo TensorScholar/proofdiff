@@ -1,0 +1,60 @@
+name: Phase 8B Gate D1 materialization
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/phase8b/materialize_gate_d_inputs.py"
+      - "benchmarks/phase8b/validate_gate_d_inputs.py"
+      - "tests/test_phase8b_gate_d_materialization.py"
+      - ".github/workflows/phase8b-gate-d1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase8b-gate-d1-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.13"
+      - name: Verify frozen Gate D protocol
+        run: python benchmarks/phase8b/validate_gate_d.py --require-freeze-ready
+      - name: Physically disable BIG candidate during D1
+        run: mv benchmarks/phase8b/big_candidate.py "$RUNNER_TEMP/big_candidate.py.disabled"
+      - name: Materialize candidate-visible inputs only
+        run: >-
+          python -m benchmarks.phase8b.materialize_gate_d_inputs
+          --work-dir "$RUNNER_TEMP/phase8b-d1-work"
+          --output "$RUNNER_TEMP/gate_d_input_manifest.json"
+      - name: Validate D1 manifest
+        run: >-
+          python -m benchmarks.phase8b.validate_gate_d_inputs
+          "$RUNNER_TEMP/gate_d_input_manifest.json"
+      - name: Show deterministic manifest digest
+        run: sha256sum "$RUNNER_TEMP/gate_d_input_manifest.json"
+      - name: Restore BIG candidate for post-job workspace integrity
+        if: always()
+        run: >-
+          if [ -f "$RUNNER_TEMP/big_candidate.py.disabled" ]; then
+            mv "$RUNNER_TEMP/big_candidate.py.disabled" benchmarks/phase8b/big_candidate.py;
+          fi
+      - name: Upload frozen-input manifest candidate
+        if: success()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: phase8b-gate-d1-input-manifest-${{ github.sha }}
+          path: ${{ runner.temp }}/gate_d_input_manifest.json
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 90
