@@ -247,9 +247,7 @@ def test_graph_digest_and_output_are_deterministic_under_input_ordering() -> Non
     sources_a = {
         "pkg/core.py": "def normalize_payload(value):\n    return value\n",
         "pkg/service.py": (
-            "from pkg.core import normalize_payload\n\n"
-            "def execute_flow(value):\n"
-            "    return normalize_payload(value)\n"
+            "from pkg.core import normalize_payload\n\ndef execute_flow(value):\n    return normalize_payload(value)\n"
         ),
     }
     sources_b = dict(reversed(list(sources_a.items())))
