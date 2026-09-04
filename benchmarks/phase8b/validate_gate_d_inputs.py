@@ -110,7 +110,7 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
 
     rows = manifest.get("rows")
     if not isinstance(rows, list):
-        return findings + ["rows must be a list"]
+        return [*findings, "rows must be a list"]
     _expect(findings, manifest.get("case_direction_count") == len(rows), "case-direction count mismatch")
     _expect(
         findings, len(rows) == len(expected_cases) * len(DIRECTIONS), "each evaluation case must have both directions"
