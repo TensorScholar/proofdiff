@@ -176,16 +176,17 @@ def _local_package_roots(candidates: dict[str, tuple[str, ...]]) -> frozenset[st
 
 
 def _resolve_relative_module(current_path: str, level: int, module: str | None) -> str | None:
+    if level == 0:
+        return module
     parts = _module_parts(current_path)
     if not parts:
         return module
     package = list(parts[:-1])
-    if level:
-        remove = max(level - 1, 0)
-        if remove > len(package):
-            return None
-        if remove:
-            package = package[:-remove]
+    remove = max(level - 1, 0)
+    if remove > len(package):
+        return None
+    if remove:
+        package = package[:-remove]
     if module:
         package.extend(module.split("."))
     return ".".join(package) if package else None
@@ -262,8 +263,8 @@ def _import_evidence(path: str, tree: ast.AST) -> tuple[tuple[ImportEvidence, ..
             for alias in node.names:
                 if alias.name == "*" or not resolved:
                     continue
-                module = f"{resolved}.{alias.name}"
-                imports.add(ImportEvidence(module, f"python_import:{module}"))
+                imported_module = f"{resolved}.{alias.name}"
+                imports.add(ImportEvidence(imported_module, f"python_import:{imported_module}"))
         elif isinstance(node, ast.Call):
             target, is_dynamic = _dynamic_import_target(node)
             if not is_dynamic:
