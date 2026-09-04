@@ -5,9 +5,10 @@ import hashlib
 import json
 import re
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import Any, Iterable
+from typing import Any
 
 ALLOWED_EDGE_CLASSES = frozenset(
     {
@@ -229,16 +230,14 @@ def _top_level_symbols(tree: ast.AST) -> tuple[str, ...]:
 
 
 def _dynamic_import_target(call: ast.Call) -> tuple[str | None, bool]:
-    is_dynamic_import = False
-    if isinstance(call.func, ast.Name) and call.func.id == "__import__":
-        is_dynamic_import = True
-    elif (
+    builtin_import = isinstance(call.func, ast.Name) and call.func.id == "__import__"
+    importlib_import = (
         isinstance(call.func, ast.Attribute)
         and call.func.attr == "import_module"
         and isinstance(call.func.value, ast.Name)
         and call.func.value.id == "importlib"
-    ):
-        is_dynamic_import = True
+    )
+    is_dynamic_import = builtin_import or importlib_import
     if not is_dynamic_import:
         return None, False
     if not call.args:
