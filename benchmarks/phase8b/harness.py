@@ -37,9 +37,9 @@ def behavior_id(repo: str, invariant: str) -> str:
 
 
 def _catalog_case(case: dict[str, Any]) -> bool:
-    return (
-        case.get("arm") == "historical" and case.get("eligibility") == "qualified"
-    ) or (case.get("arm") == "control" and case.get("eligibility") == "control")
+    return (case.get("arm") == "historical" and case.get("eligibility") == "qualified") or (
+        case.get("arm") == "control" and case.get("eligibility") == "control"
+    )
 
 
 def derive_behavior_catalog(corpus: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
@@ -78,10 +78,7 @@ def derive_behavior_catalog(corpus: dict[str, Any]) -> dict[str, list[dict[str, 
     by_repo: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in merged.values():
         by_repo[str(item["repo"])].append(item)
-    return {
-        repo: sorted(items, key=lambda item: str(item["behavior_id"]))
-        for repo, items in sorted(by_repo.items())
-    }
+    return {repo: sorted(items, key=lambda item: str(item["behavior_id"])) for repo, items in sorted(by_repo.items())}
 
 
 def derive_ground_truth(corpus: dict[str, Any]) -> list[dict[str, Any]]:
@@ -94,13 +91,7 @@ def derive_ground_truth(corpus: dict[str, Any]) -> list[dict[str, Any]]:
         invariants = raw_case.get("protected_invariants")
         if not isinstance(repo, str) or not isinstance(invariants, list):
             continue
-        ids = sorted(
-            {
-                behavior_id(repo, invariant)
-                for invariant in invariants
-                if isinstance(invariant, str)
-            }
-        )
+        ids = sorted({behavior_id(repo, invariant) for invariant in invariants if isinstance(invariant, str)})
         rows.append(
             {
                 "case_id": raw_case.get("case_id"),
