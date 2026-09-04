@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "rules_status": "draft",
+  "component_rules": {
+    "pydantic/pydantic-ai": [
+      {"prefix": "pydantic_ai_slim/pydantic_ai/models/", "tags": ["provider-adapter", "tool-calls", "streaming"]},
+      {"prefix": "pydantic_ai_slim/pydantic_ai/ui/", "tags": ["ui-events", "streaming", "cancellation"]},
+      {"prefix": "pydantic_ai_slim/pydantic_ai/", "tags": ["tool-execution", "message-history", "resume", "deferred-tools"]}
+    ],
+    "google/adk-python": [
+      {"prefix": "src/google/adk/flows/", "tags": ["function-calls", "history", "async-tools", "event-ordering"]},
+      {"prefix": "src/google/adk/workflow/", "tags": ["workflow", "hitl", "resume", "tool-confirmation", "message-history"]},
+      {"prefix": "src/google/adk/agents/", "tags": ["parallel-agents", "a2a", "workflow", "streaming", "exceptions"]},
+      {"prefix": "src/google/adk/telemetry/", "tags": ["telemetry", "credentials", "privacy"]},
+      {"prefix": "src/google/adk/code_executors/", "tags": ["code-execution", "sandbox", "credentials"]},
+      {"prefix": "src/google/adk/runners.py", "tags": ["workflow", "callbacks", "early-exit", "session-persistence"]}
+    ],
+    "openai/openai-agents-python": [
+      {"prefix": "src/agents/run", "tags": ["sessions", "resume", "streaming", "durability", "reasoning-items", "hitl", "approvals"]},
+      {"prefix": "src/agents/realtime/", "tags": ["realtime", "validation", "privacy"]},
+      {"prefix": "src/agents/handoffs/", "tags": ["handoffs", "validation", "privacy"]},
+      {"prefix": "src/agents/memory/", "tags": ["sessions", "durability", "compaction"]},
+      {"prefix": "src/agents/", "tags": ["validation", "privacy", "sessions", "resume"]}
+    ],
+    "crewAIInc/crewAI": [
+      {"prefix": "lib/crewai/src/crewai/memory/", "tags": ["memory", "configuration", "state-mutation"]},
+      {"prefix": "lib/crewai/src/crewai/flow/", "tags": ["hitl", "routing", "llm-classification", "policy", "flows", "conversation", "persistence", "event-emission"]},
+      {"prefix": "lib/crewai/src/crewai/experimental/", "tags": ["flows", "conversation", "persistence", "event-emission"]}
+    ],
+    "agno-agi/agno": [
+      {"prefix": "libs/agno/agno/tools/", "tags": ["dispatch", "teams", "workflows", "metadata-provenance", "cancellation", "security"]},
+      {"prefix": "libs/agno/agno/db/", "tags": ["dispatch", "metadata-provenance", "security"]},
+      {"prefix": "libs/agno/agno/os/", "tags": ["dispatch", "metadata-provenance", "cancellation", "security"]},
+      {"prefix": "libs/agno/agno/scheduler/", "tags": ["dispatch", "cancellation", "security"]}
+    ]
+  },
+  "path_rules": {
+    "pydantic/pydantic-ai": [
+      {"glob": "pydantic_ai_slim/pydantic_ai/models/xai.py", "tags": ["streaming", "native-tools", "provider-adapter", "output-validation"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/_agent_graph.py", "tags": ["cancellation", "tool-execution", "message-history", "resume"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/messages.py", "tags": ["message-history", "resume"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/_deferred.py", "tags": ["deferred-tools", "approvals", "external-actions", "resume"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/tool_manager.py", "tags": ["deferred-tools", "tool-execution", "external-actions", "resume"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/ui/**", "tags": ["streaming", "cancellation", "ui-events", "tool-call-deltas"]},
+      {"glob": "pydantic_ai_slim/pydantic_ai/models/cohere.py", "tags": ["provider-adapter", "tool-calls", "history-roundtrip", "retry"]}
+    ],
+    "google/adk-python": [
+      {"glob": "src/google/adk/flows/llm_flows/contents.py", "tags": ["function-calls", "history", "async-tools", "event-ordering"]},
+      {"glob": "src/google/adk/agents/parallel_agent.py", "tags": ["parallel-agents", "async-generators", "exceptions", "streaming"]},
+      {"glob": "src/google/adk/runners.py", "tags": ["workflow", "callbacks", "early-exit", "session-persistence"]},
+      {"glob": "src/google/adk/workflow/_llm_agent_wrapper.py", "tags": ["hitl", "resume", "tool-confirmation", "message-history"]},
+      {"glob": "src/google/adk/agents/remote_a2a_agent.py", "tags": ["a2a", "workflow", "join-node", "streaming-state"]},
+      {"glob": "src/google/adk/telemetry/tracing.py", "tags": ["telemetry", "credentials", "http-options", "privacy"]},
+      {"glob": "src/google/adk/code_executors/gke_code_executor.py", "tags": ["code-execution", "gke", "sandbox", "credentials"]}
+    ],
+    "openai/openai-agents-python": [
+      {"glob": "src/agents/run_state.py", "tags": ["hitl", "serialization", "approvals", "output-guardrails", "sessions", "resume", "durability", "compaction"]},
+      {"glob": "src/agents/run.py", "tags": ["sessions", "reasoning-items", "handoffs", "resume", "streaming", "durability"]},
+      {"glob": "src/agents/run_internal/items.py", "tags": ["reasoning-items", "sessions"]},
+      {"glob": "src/agents/run_internal/session_persistence.py", "tags": ["sessions", "resume", "durability", "compaction", "reasoning-items"]},
+      {"glob": "src/agents/run_internal/run_loop.py", "tags": ["sessions", "resume", "streaming", "durability", "validation", "privacy"]},
+      {"glob": "src/agents/agent_output.py", "tags": ["validation", "privacy"]},
+      {"glob": "src/agents/exceptions.py", "tags": ["validation", "privacy", "tracebacks"]},
+      {"glob": "src/agents/handoffs/**", "tags": ["handoffs", "validation", "privacy"]},
+      {"glob": "src/agents/realtime/**", "tags": ["realtime", "validation", "privacy"]},
+      {"glob": "src/agents/result.py", "tags": ["sessions", "resume", "validation", "privacy", "durability"]},
+      {"glob": "src/agents/run_internal/error_handlers.py", "tags": ["validation", "privacy", "tracebacks"]},
+      {"glob": "src/agents/run_internal/turn_resolution.py", "tags": ["validation", "privacy", "handoffs"]},
+      {"glob": "src/agents/util/_json.py", "tags": ["validation", "privacy"]},
+      {"glob": "src/agents/memory/openai_responses_compaction_session.py", "tags": ["sessions", "durability", "compaction"]}
+    ],
+    "crewAIInc/crewAI": [
+      {"glob": "lib/crewai/src/crewai/memory/memory_scope.py", "tags": ["memory", "configuration", "state-mutation"]},
+      {"glob": "lib/crewai/src/crewai/flow/dsl/_human_feedback.py", "tags": ["hitl", "routing", "llm-classification", "policy"]},
+      {"glob": "lib/crewai/src/crewai/flow/flow_definition.py", "tags": ["hitl", "routing", "policy"]},
+      {"glob": "lib/crewai/src/crewai/flow/human_feedback.py", "tags": ["hitl", "routing", "llm-classification", "policy"]},
+      {"glob": "lib/crewai/src/crewai/flow/runtime/**", "tags": ["hitl", "routing", "policy"]},
+      {"glob": "lib/crewai/src/crewai/experimental/conversational_mixin.py", "tags": ["flows", "conversation", "persistence", "event-emission"]}
+    ],
+    "agno-agi/agno": [
+      {"glob": "libs/agno/agno/tools/studio.py", "tags": ["dispatch", "teams", "workflows", "metadata-provenance", "cancellation", "security"]},
+      {"glob": "libs/agno/agno/tools/studio_runner.py", "tags": ["dispatch", "teams", "workflows", "metadata-provenance", "cancellation", "security"]},
+      {"glob": "libs/agno/agno/tools/studio_schema.py", "tags": ["dispatch", "metadata-provenance", "security"]},
+      {"glob": "libs/agno/agno/db/schemas/scheduler.py", "tags": ["dispatch", "metadata-provenance", "security"]},
+      {"glob": "libs/agno/agno/os/routers/session/session.py", "tags": ["dispatch", "metadata-provenance", "cancellation", "security"]},
+      {"glob": "libs/agno/agno/os/utils.py", "tags": ["dispatch", "metadata-provenance", "cancellation", "security"]},
+      {"glob": "libs/agno/agno/scheduler/executor.py", "tags": ["dispatch", "cancellation", "security"]}
+    ]
+  },
+  "lexical_surface": {
+    "minimum_shared_tokens": 1,
+    "minimum_jaccard": 0.08,
+    "always_select_risks": ["critical"],
+    "unknown_policy": "widen_or_review"
+  }
+}
