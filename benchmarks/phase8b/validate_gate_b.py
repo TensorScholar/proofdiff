@@ -134,10 +134,7 @@ def _rules_integrity(
     catalogs = derive_behavior_catalog(corpus)
     for repo, behaviors in catalogs.items():
         known_behavior_tags[repo] = {
-            str(tag)
-            for behavior in behaviors
-            for tag in behavior.get("surface_tags", [])
-            if isinstance(tag, str)
+            str(tag) for behavior in behaviors for tag in behavior.get("surface_tags", []) if isinstance(tag, str)
         }
 
     for section_name, section in (("component_rules", component_rules), ("path_rules", path_rules)):
