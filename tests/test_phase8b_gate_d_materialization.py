@@ -216,6 +216,10 @@ def test_manifest_validator_rejects_observation_leakage_and_posthoc_drift() -> N
     imported["candidate_imported_during_materialization"] = True
     assert any("must not be imported" in item for item in d1v.validate_manifest(imported))
 
+    stale_materializer = copy.deepcopy(valid)
+    stale_materializer["materializer_blob_sha"] = "0" * 40
+    assert any("materializer blob mismatch" in item for item in d1v.validate_manifest(stale_materializer))
+
     widened_visibility = copy.deepcopy(valid)
     widened_visibility["candidate_payload_keys"] = sorted([*d1.PAYLOAD_KEYS, "case_id"])
     assert any("payload key" in item for item in d1v.validate_manifest(widened_visibility))
