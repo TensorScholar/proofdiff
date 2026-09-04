@@ -67,8 +67,7 @@ def _git(repo_dir: Path, *args: str, check: bool = True) -> subprocess.Completed
     return subprocess.run(
         ["git", "-C", str(repo_dir), *args],
         check=check,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
     )
 
 
