@@ -33,16 +33,16 @@ jobs:
       - name: Verify D1 materializer cannot import or invoke BIG
         run: |
           python -m pip install -e '.[dev,yaml]'
-          pytest -q tests/test_phase8b_gate_d_materialization.py
+          python -m pytest -q tests/test_phase8b_gate_d_materialization.py
 
       - name: Materialize exact frozen upstream inputs
         run: |
-          python benchmarks/phase8b/materialize_gate_d_inputs.py \
+          python -m benchmarks.phase8b.materialize_gate_d_inputs \
             --output .proofdiff/phase8b/gate-d1
 
       - name: Independently validate materialized candidate-visible payloads
         run: |
-          python benchmarks/phase8b/validate_gate_d_materialization.py \
+          python -m benchmarks.phase8b.validate_gate_d_materialization \
             --root .proofdiff/phase8b/gate-d1
 
       - name: Print deterministic manifest digest
